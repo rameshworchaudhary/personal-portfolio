@@ -251,6 +251,31 @@
       opacity:0;animation:riseUp .8s 1.2s forwards;
     }
 
+    .project-buttons {
+      display:flex;gap:14px;flex-wrap:wrap;
+      margin-top:16px;
+      opacity:0;animation:riseUp .8s 1.4s forwards;
+    }
+
+    .project-buttons .btn {
+      padding:12px 22px;
+      font-size:12px;
+      letter-spacing:2px;
+    }
+
+    .cv-btn {
+      background:rgba(212,144,10,0.14);
+      color:var(--gold2);
+      border:1px solid rgba(212,144,10,0.35);
+      clip-path:none;
+    }
+
+    .cv-btn:hover {
+      background:rgba(212,144,10,0.22);
+      box-shadow:0 0 24px rgba(212,144,10,0.25);
+      transform:translateY(-3px);
+    }
+
     .btn {
       display:inline-flex;align-items:center;gap:10px;
       padding:15px 38px;
@@ -300,6 +325,8 @@
 
     @keyframes riseUp{from{opacity:0;transform:translateY(40px);}to{opacity:1;transform:translateY(0);}}
     @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+   
 
     /* ─── DIVIDER ─── */
     .divider{
@@ -561,6 +588,32 @@
       border:1px solid rgba(255,255,255,0.07);
       padding:4px 10px;
     }
+    .proj-actions {
+      margin-top:18px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .proj-btn {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 16px;
+      border:1px solid rgba(232,0,26,0.35);
+      background:rgba(232,0,26,0.12);
+      color:var(--white);
+      text-decoration:none;
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      transition:all .3s;
+    }
+    .proj-btn:hover {
+      background:rgba(232,0,26,0.22);
+      transform:translateY(-2px);
+      box-shadow:0 0 20px rgba(232,0,26,0.2);
+    }
 
     /* ─── EXPERIENCE ─── */
     .timeline {
@@ -781,6 +834,11 @@
       <a href="#projects" class="btn btn-red">🕸 View Projects</a>
       <a href="#contact" class="btn btn-outline">Contact Me →</a>
     </div>
+
+    <div class="project-buttons">
+      <a href="https://github.com/chaudharii" target="_blank" class="btn btn-outline">💻 GitHub</a>
+      <a href="https://drive.google.com/file/d/17lpH6BZhKwomU49QwbXJqA9O7t3CHRp7/view?usp=drive_link" download class="btn cv-btn">📄 Download CV</a>
+    </div>
   </div>
 
   <div class="scroll-hint">
@@ -930,6 +988,9 @@
           <span class="tech-tag">Next.js</span>
           <span class="tech-tag">Vercel</span>
         </div>
+        <div class="proj-actions">
+          <a href="https://exam-mind-ai-six.vercel.app/" target="_blank" rel="noopener noreferrer" class="proj-btn">Open Project</a>
+        </div>
       </div>
     </div>
 
@@ -956,6 +1017,9 @@
           <span class="tech-tag">MediaPipe</span>
           <span class="tech-tag">AI Vision</span>
         </div>
+        <div class="proj-actions">
+          <a href="https://github.com/chaudharii/AI_Football_Game" target="_blank" rel="noopener noreferrer" class="proj-btn">Open Project</a>
+        </div>
       </div>
     </div>
 
@@ -981,6 +1045,9 @@
           <span class="tech-tag">AI API</span>
           <span class="tech-tag">Tailwind</span>
           <span class="tech-tag">Firebase</span>
+        </div>
+        <div class="proj-actions">
+          <a href="https://resume-builder-puce-tau.vercel.app/" target="_blank" rel="noopener noreferrer" class="proj-btn">Open Project</a>
         </div>
       </div>
     </div>
@@ -1034,6 +1101,9 @@
           <span class="tech-tag">Pandas</span>
           <span class="tech-tag">ML</span>
         </div>
+        <div class="proj-actions">
+          <a href="https://github.com/chaudharii/model" target="_blank" rel="noopener noreferrer" class="proj-btn">Open Project</a>
+        </div>
       </div>
     </div>
 
@@ -1059,6 +1129,9 @@
           <span class="tech-tag">Python</span>
           <span class="tech-tag">Logistic Regression</span>
           <span class="tech-tag">Data Analysis</span>
+        </div>
+        <div class="proj-actions">
+          <a href="https://github.com/chaudharii/Model-2" target="_blank" rel="noopener noreferrer" class="proj-btn">Open Project</a>
         </div>
       </div>
     </div>
