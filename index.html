@@ -1286,25 +1286,26 @@
         </div>
       </div>
     </div>
-    <div class="contact-form reveal">
+    <form class="contact-form reveal" action="https://api.web3forms.com/submit" method="POST">
+      <input type="hidden" name="access_key" value="b280464a-ba65-4910-a01d-7e94b349436f">
       <div class="fg">
         <label>Your Name</label>
-        <input type="text" placeholder="Tony Stark"/>
+        <input type="text" name="name" placeholder="Tony Stark" required>
       </div>
       <div class="fg">
         <label>Email Address</label>
-        <input type="email" placeholder="tony@starkindustries.com"/>
+        <input type="email" name="email" placeholder="tony@starkindustries.com" required>
       </div>
       <div class="fg">
         <label>Project Type</label>
-        <input type="text" placeholder="e.g. LLM Chatbot, CV System, MLOps"/>
+        <input type="text" name="project_type" placeholder="e.g. LLM Chatbot, CV System, MLOps">
       </div>
       <div class="fg">
         <label>Message</label>
-        <textarea rows="5" placeholder="Tell me about your AI mission..."></textarea>
+        <textarea rows="5" name="message" placeholder="Tell me about your AI mission..." required></textarea>
       </div>
-      <button class="btn btn-red" onclick="handleSend(this)">Send Mission Brief 🕷</button>
-    </div>
+      <button type="submit" class="btn btn-red" onclick="handleSend(this)">Send Mission Brief 🕷</button>
+    </form>
   </div>
 </div>
 
