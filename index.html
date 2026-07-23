@@ -525,6 +525,33 @@
     }
 
     /* ─── PROJECTS ─── */
+    .projects-filter {
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin:0 0 28px;
+    }
+    .filter-btn {
+      border:1px solid rgba(255,255,255,0.1);
+      background:rgba(255,255,255,0.03);
+      color:var(--dim);
+      padding:10px 18px;
+      font-family:'Rajdhani',sans-serif;
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      cursor:pointer;
+      transition:all .3s ease;
+    }
+    .filter-btn:hover,
+    .filter-btn.active {
+      background:rgba(232,0,26,0.15);
+      color:var(--white);
+      border-color:rgba(232,0,26,0.35);
+      box-shadow:0 0 24px rgba(232,0,26,0.15);
+    }
+
     .projects-grid {
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
@@ -574,6 +601,22 @@
       color:var(--gold2);text-transform:uppercase;
       margin-bottom:8px;
     }
+    .proj-status {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      margin:0 0 14px;
+      padding:6px 10px;
+      font-size:10px;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      font-weight:700;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.08);
+    }
+    .status-completed { background:rgba(26,138,74,0.16); color:#7ef1a3; border-color:rgba(26,138,74,0.35); }
+    .status-inprogress { background:rgba(212,144,10,0.14); color:#ffd277; border-color:rgba(212,144,10,0.35); }
+    .status-planned { background:rgba(57,132,255,0.14); color:#7eb7ff; border-color:rgba(57,132,255,0.35); }
     .proj-name{
       font-family:'Bebas Neue',sans-serif;
       font-size:28px;letter-spacing:2px;margin-bottom:10px;
@@ -965,9 +1008,16 @@
     <h2 class="sec-title">MY <span class="accent">PROJECTS</span></h2>
   </div>
 
+  <div class="projects-filter reveal">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="completed">Completed</button>
+    <button class="filter-btn" data-filter="inprogress">In Progress</button>
+    <button class="filter-btn" data-filter="planned">Future Planned</button>
+  </div>
+
   <div class="projects-grid">
 
-    <div class="proj-card reveal">
+    <div class="proj-card reveal" data-status="completed">
       <div class="proj-thumb proj-t1">
         🤖
         <div class="proj-thumb-overlay">
@@ -977,6 +1027,7 @@
 
       <div class="proj-body">
         <div class="proj-tag">AI · Web App</div>
+        <div class="proj-status status-completed">Completed</div>
         <div class="proj-name">Exam Mind AI</div>
 
         <div class="proj-desc">
@@ -995,7 +1046,7 @@
       </div>
     </div>
 
-    <div class="proj-card reveal">
+    <div class="proj-card reveal" data-status="In progress">
       <div class="proj-thumb proj-t2">
         🎮
         <div class="proj-thumb-overlay">
@@ -1005,7 +1056,7 @@
 
       <div class="proj-body">
         <div class="proj-tag">Computer Vision · AI</div>
-
+        <div class="proj-status status-inprogress">In Progress</div>
         <div class="proj-name">AI Gesture Control Game</div>
 
         <div class="proj-desc">
@@ -1024,7 +1075,7 @@
       </div>
     </div>
 
-    <div class="proj-card reveal">
+    <div class="proj-card reveal" data-status="In progress">
       <div class="proj-thumb proj-t3">
         📄
         <div class="proj-thumb-overlay">
@@ -1034,7 +1085,7 @@
 
       <div class="proj-body">
         <div class="proj-tag">AI · Productivity</div>
-
+        <div class="proj-status status-inprogress">In Progress</div>
         <div class="proj-name">AI Resume Builder</div>
 
         <div class="proj-desc">
@@ -1053,7 +1104,7 @@
       </div>
     </div>
 
-    <div class="proj-card reveal">
+    <div class="proj-card reveal" data-status="In progress">
       <div class="proj-thumb proj-t4">
         🎙️
         <div class="proj-thumb-overlay">
@@ -1063,7 +1114,7 @@
 
       <div class="proj-body">
         <div class="proj-tag">Voice AI · Assistant</div>
-
+        <div class="proj-status status-inprogress">In Progress</div>
         <div class="proj-name">Parth AI Voice Assistant</div>
 
         <div class="proj-desc">
@@ -1079,7 +1130,7 @@
       </div>
     </div>
 
-    <div class="proj-card reveal">
+    <div class="proj-card reveal" data-status="completed">
       <div class="proj-thumb proj-t5">
         📈
         <div class="proj-thumb-overlay">
@@ -1089,7 +1140,7 @@
 
       <div class="proj-body">
         <div class="proj-tag">Machine Learning</div>
-
+        <div class="proj-status status-completed">Completed</div>
         <div class="proj-name">House Price Prediction</div>
 
         <div class="proj-desc">
@@ -1108,7 +1159,7 @@
       </div>
     </div>
 
-    <div class="proj-card reveal">
+    <div class="proj-card reveal" data-status="completed">
       <div class="proj-thumb proj-t6">
         ❤️
         <div class="proj-thumb-overlay">
@@ -1118,7 +1169,7 @@
 
       <div class="proj-body">
         <div class="proj-tag">Healthcare · AI</div>
-
+        <div class="proj-status status-completed">Completed</div>
         <div class="proj-name">Heart Disease Prediction</div>
 
         <div class="proj-desc">
@@ -1378,6 +1429,19 @@ document.querySelectorAll('.skill-card').forEach(card=>{
     });
   },{threshold:.3});
   obs.observe(card);
+});
+
+// ── PROJECT FILTERS ──
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const filter=btn.dataset.filter;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.proj-card').forEach(card=>{
+      const matches = filter === 'all' || card.dataset.status === filter;
+      card.style.display = matches ? 'block' : 'none';
+    });
+  });
 });
 
 // ── SMOOTH SCROLL ──
