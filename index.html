@@ -18,6 +18,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <!-- Ishwor AI Voice Assistant Styles -->
+  <link rel="stylesheet" href="ishwor-assistant.css">
 
   <style>
     /* ── RAMESHWOR DIGITAL LAB SYSTEM VARIABLES ── */
@@ -430,19 +432,67 @@
     .btn-hud-hire {
       padding: 9px 22px;
       background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-      color: #000000;
+      color: #000000 !important;
       border-radius: 999px;
       font-family: var(--font-body);
       font-size: 12px;
       font-weight: 800;
       text-decoration: none;
       transition: all 0.25s ease;
-      box-shadow: 0 4px 20px rgba(0, 240, 255, 0.3);
+      box-shadow: 0 4px 20px rgba(0, 240, 255, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .btn-hud-hire:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 240, 255, 0.5);
+      box-shadow: 0 8px 30px rgba(0, 240, 255, 0.7);
+      color: #000000 !important;
+    }
+
+    .mobile-only-menu-action {
+      display: none;
+    }
+
+    .btn-mobile-menu-hire {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, #00f0ff, #a855f7);
+      color: #000000 !important;
+      font-family: var(--font-body);
+      font-weight: 800;
+      font-size: 15px;
+      border-radius: 999px;
+      text-decoration: none;
+      box-shadow: 0 6px 25px rgba(0, 240, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1.5px solid #ffffff;
+    }
+
+    .btn-mobile-menu-resume {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-light);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 13px;
+      border-radius: 999px;
+      text-decoration: none;
     }
 
     .mobile-menu-btn {
@@ -1586,22 +1636,56 @@
       .contact-lab-grid { grid-template-columns: 1fr; gap: 32px; }
     }
 
+    @media (max-width: 850px) {
+      .hero-cta-group {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      .btn-main-glow, .btn-secondary-glass {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 14px 20px;
+        min-height: 50px;
+        box-sizing: border-box;
+        flex-shrink: 0;
+      }
+      .hero-scroll-indicator {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        margin-top: 24px;
+        font-size: 11px;
+        letter-spacing: 2px;
+        gap: 10px;
+      }
+    }
+
     @media (max-width: 768px) {
       header {
-        padding: 12px 18px;
+        padding: 10px 14px;
+        justify-content: space-between;
       }
       header.scrolled {
-        padding: 10px 18px;
+        padding: 8px 14px;
       }
       .hud-logo {
-        font-size: 16px;
+        font-size: 15px;
+        flex-shrink: 0;
       }
       .hud-logo-tag {
-        font-size: 9px;
-        padding: 1px 6px;
+        display: none;
       }
       .hud-actions {
         gap: 6px;
+        margin-left: auto;
+        margin-right: 6px;
       }
       .btn-hud-control {
         padding: 6px 10px;
@@ -1612,20 +1696,32 @@
         font-size: 11px;
       }
       .btn-hud-hire {
-        padding: 6px 14px;
-        font-size: 11px;
+        padding: 7px 16px;
+        font-size: 11.5px;
+        font-weight: 800;
+        box-shadow: 0 0 16px rgba(0, 240, 255, 0.6);
+        border: 1.5px solid rgba(255, 255, 255, 0.6);
       }
       .hud-nav-menu {
         position: fixed;
         inset: 0;
-        background: var(--bg-canvas);
+        background: rgba(10, 12, 22, 0.98);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
         flex-direction: column;
         justify-content: center;
-        gap: 28px;
-        z-index: 99;
+        align-items: center;
+        gap: 18px;
+        z-index: 999;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.3s ease;
+        padding: 24px;
+      }
+      .mobile-only-menu-action {
+        display: block;
+        width: 100%;
+        max-width: 280px;
       }
       .hud-nav-menu.mobile-open {
         opacity: 1;
@@ -1634,7 +1730,7 @@
       .hud-nav-link {
         font-size: 18px;
       }
-      .mobile-menu-btn { display: block; z-index: 100; font-size: 26px; }
+      .mobile-menu-btn { display: block; z-index: 1000; font-size: 24px; padding: 4px; }
       .spatial-scene-trigger { padding: 80px 18px 40px; min-height: auto; }
       .sec-title-large { font-size: clamp(30px, 7vw, 42px); margin-bottom: 16px; }
       .hero-title-main { font-size: clamp(34px, 9vw, 56px); letter-spacing: -1.5px; margin-bottom: 16px; }
@@ -1668,8 +1764,13 @@
       .modal-close-icon { top: 16px; right: 16px; width: 36px; height: 36px; font-size: 16px; }
     }
 
+    @media (max-width: 640px) {
+      .hide-mobile-sm { display: none !important; }
+    }
+
     @media (max-width: 480px) {
       .hud-actions .btn-text-label { display: none; }
+      .hide-mobile-xs { display: none !important; }
       .about-stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
       .stat-box { padding: 10px 6px; }
       .stat-number { font-size: 22px; }
@@ -1721,8 +1822,6 @@
       RAMESHWOR<span class="hud-logo-tag"></span>
     </a>
 
-    <button class="mobile-menu-btn" id="mobile-toggle">☰</button>
-
     <ul class="hud-nav-menu" id="hud-nav-list">
       <li><a href="#hero" class="hud-nav-link active">CORE</a></li>
       <li><a href="#about" class="hud-nav-link">ABOUT</a></li>
@@ -1730,11 +1829,17 @@
       <li><a href="#projects" class="hud-nav-link">WORK</a></li>
       <li><a href="#journey" class="hud-nav-link">JOURNEY</a></li>
       <li><a href="#contact" class="hud-nav-link">CONTACT</a></li>
+      <li class="mobile-only-menu-action">
+        <a href="#contact" class="btn-mobile-menu-hire">💼 HIRE RAMESHWOR</a>
+      </li>
+      <li class="mobile-only-menu-action">
+        <a href="https://drive.google.com/file/d/1uo231O5QoB2iW9cbs0JiO3voDML1tCNu/view?usp=sharing" target="_blank" rel="noopener" class="btn-mobile-menu-resume">📄 VIEW RESUME</a>
+      </li>
     </ul>
 
     <div class="hud-actions">
       <!-- Freehand Doodle Toggle -->
-      <button class="btn-hud-control" id="doodle-btn" title="Toggle Freehand Sketch Overlay">
+      <button class="btn-hud-control hide-mobile-sm" id="doodle-btn" title="Toggle Freehand Sketch Overlay">
         ✎ <span class="btn-text-label">DOODLE</span>
       </button>
 
@@ -1744,13 +1849,15 @@
       </button>
 
       <!-- Web Audio SFX Switcher -->
-      <button class="btn-hud-control" id="sfx-btn" title="Toggle Audio Sound FX">
+      <button class="btn-hud-control hide-mobile-sm" id="sfx-btn" title="Toggle Audio Sound FX">
         <span id="sfx-icon">🔊</span> <span class="btn-text-label">SFX</span>
       </button>
 
-      <a href="https://drive.google.com/file/d/1uo231O5QoB2iW9cbs0JiO3voDML1tCNu/view?usp=sharing" target="_blank" rel="noopener" class="btn-hud-resume">📄 <span class="btn-text-label">RESUME</span></a>
-      <a href="#contact" class="btn-hud-hire">HIRE</a>
+      <a href="https://drive.google.com/file/d/1uo231O5QoB2iW9cbs0JiO3voDML1tCNu/view?usp=sharing" target="_blank" rel="noopener" class="btn-hud-resume hide-mobile-xs">📄 <span class="btn-text-label">RESUME</span></a>
+      <a href="#contact" class="btn-hud-hire">💼 HIRE</a>
     </div>
+
+    <button class="mobile-menu-btn" id="mobile-toggle" aria-label="Toggle Navigation Menu">☰</button>
   </header>
 
   <!-- CONTENT CONTAINER FOR SCROLLTRIGGER SPATIAL SECTIONS -->
@@ -1778,7 +1885,7 @@
 
         <div class="hero-cta-group">
           <a href="#projects" class="btn-main-glow">EXPLORE DIGITAL LAB 🕸</a>
-          <a href="#contact" class="btn-secondary-glass">INITIATE MISSION 💬</a>
+          <a href="#contact" class="btn-secondary-glass">💼 HIRE ME / CONTACT</a>
         </div>
       </div>
 
@@ -2786,5 +2893,7 @@
     }
     renderLoop();
   </script>
+  <!-- Ishwor AI Voice Assistant Script -->
+  <script src="ishwor-assistant.js" defer></script>
 </body>
 </html>
