@@ -425,6 +425,10 @@
         })
       });
 
+      if (!res.ok) {
+        throw new Error(`API returned status ${res.status}`);
+      }
+
       const data = await res.json();
       const reply = data.reply || "I'm having trouble getting an answer right now. Please try again!";
 
@@ -439,6 +443,8 @@
       const errMsg = "Sorry bhai, I'm having trouble connecting right now. Please check your connection and try again!";
       appendMessage(errMsg, 'bot');
       speakText(errMsg);
+    } finally {
+      setStatus('', 'Idle');
     }
   }
 
