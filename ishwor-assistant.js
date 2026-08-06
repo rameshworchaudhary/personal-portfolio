@@ -11,8 +11,9 @@
   let conversationHistory = [];
   let recognition = null;
   let greetingPlayed = false;
+  let autoGreetingShown = false;
 
-  const GREETING_TEXT = "Welcome to Rameshwor Chaudhary's Portfolio. How can I help you? Just type your question in English or Hinglish.";
+  const GREETING_TEXT = "Hey! 👋 Welcome to Rameshwor Chaudhary's portfolio. I'm Rameshwor Chaudhary — AI & ML Developer.";
 
   // Unlock Speech Synthesis Audio Engine on mobile touch/click
   function unlockAudio() {
@@ -482,6 +483,36 @@
     }, 50);
   }
 
+  function showAutoGreeting() {
+    if (autoGreetingShown) return;
+    autoGreetingShown = true;
+
+    const hero = document.getElementById('hero');
+    if (!hero) return;
+
+    let greetingEl = document.getElementById('hero-auto-greeting');
+    if (!greetingEl) {
+      greetingEl = document.createElement('div');
+      greetingEl.id = 'hero-auto-greeting';
+      greetingEl.className = 'hero-auto-greeting';
+      greetingEl.setAttribute('aria-live', 'polite');
+      greetingEl.innerHTML = `
+        <p>Hey! 👋 Welcome to Rameshwor Chaudhary's portfolio.</p>
+        <p>I'm <strong>Rameshwor Chaudhary</strong> — AI & ML Developer.</p>
+      `;
+      const titleEl = hero.querySelector('.hero-title-main');
+      if (titleEl) {
+        hero.insertBefore(greetingEl, titleEl);
+      } else {
+        hero.prepend(greetingEl);
+      }
+    }
+
+    requestAnimationFrame(() => {
+      greetingEl.classList.add('visible');
+    });
+  }
+
   // Play Welcome Greeting
   function playWelcomeGreeting(force) {
     if (greetingPlayed && !force) return;
@@ -547,15 +578,26 @@
     }, 1500);
   }
 
+  function scheduleAutoGreeting() {
+    setTimeout(() => {
+      showAutoGreeting();
+      playWelcomeGreeting(false);
+    }, 800);
+  }
+
   // On DOM Ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       initDOM();
-      setTimeout(() => playWelcomeGreeting(false), 800);
+      window.addEventListener('load', scheduleAutoGreeting, { once: true });
     });
   } else {
     initDOM();
-    setTimeout(() => playWelcomeGreeting(false), 800);
+    if (document.readyState === 'complete') {
+      scheduleAutoGreeting();
+    } else {
+      window.addEventListener('load', scheduleAutoGreeting, { once: true });
+    }
   }
 
 })();
