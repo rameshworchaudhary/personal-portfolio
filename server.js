@@ -15,6 +15,15 @@ if (process.env.PORT && Number.isNaN(Number(process.env.PORT))) {
   console.warn('Invalid PORT env value, falling back to 3000');
 }
 
+// Redirect non-www domain to canonical www domain
+app.use((req, res, next) => {
+  const host = req.headers.host;
+  if (host && host.toLowerCase() === 'rameshworchaudhary.com.np') {
+    return res.redirect(301, `https://www.rameshworchaudhary.com.np${req.originalUrl || req.url}`);
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(express.static(__dirname));
 

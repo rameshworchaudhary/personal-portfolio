@@ -1,3 +1,17 @@
 {
-  "version": 2
+  "version": 2,
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "rameshworchaudhary.com.np"
+        }
+      ],
+      "destination": "https://www.rameshworchaudhary.com.np/$1",
+      "permanent": true
+    }
+  ]
 }
+
