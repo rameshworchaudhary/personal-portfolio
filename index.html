@@ -20,6 +20,15 @@
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@type": "ProfilePage",
+        "@id": "https://www.rameshworchaudhary.com.np/#profilepage",
+        "url": "https://www.rameshworchaudhary.com.np/",
+        "name": "Rameshwor Chaudhary | AI/ML Engineer Portfolio",
+        "mainEntity": {
+          "@id": "https://www.rameshworchaudhary.com.np/#person"
+        }
+      },
+      {
         "@type": "WebSite",
         "@id": "https://www.rameshworchaudhary.com.np/#website",
         "url": "https://www.rameshworchaudhary.com.np/",
@@ -32,6 +41,7 @@
         "name": "Rameshwor Chaudhary",
         "url": "https://www.rameshworchaudhary.com.np/",
         "jobTitle": "AI/ML Engineer & Full-Stack Developer",
+        "description": "AI/ML Engineer and Creative Full-Stack Developer specializing in Artificial Intelligence, Machine Learning, Deep Learning, and Full-Stack Web Development.",
         "knowsAbout": [
           "Artificial Intelligence",
           "Machine Learning",
@@ -1662,6 +1672,54 @@
       color: #000000;
     }
 
+    /* ── CONTACT TOAST NOTIFICATION ── */
+    #contact-toast {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+      background: var(--bg-card);
+      border: 1px solid var(--border-glow);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px var(--border-glow);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #contact-toast.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    #contact-toast.toast-success {
+      border-color: var(--accent-emerald);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(16, 185, 129, 0.3);
+    }
+    #contact-toast.toast-error {
+      border-color: #ef4444;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(239, 68, 68, 0.3);
+    }
+    @media (max-width: 640px) {
+      #contact-toast {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        justify-content: center;
+        text-align: center;
+      }
+    }
+
     footer {
       padding: 60px 0 40px;
       text-align: center;
@@ -2184,6 +2242,9 @@
     </div>
   </div>
 
+  <!-- CONTACT TOAST NOTIFICATION CONTAINER -->
+  <div id="contact-toast" role="alert" aria-live="assertive"></div>
+
   <footer>
     <p>© 2026 RAMESHWOR CHAUDHARY // HANDCRAFTED 3D DIGITAL LAB EXPERIENCE</p>
   </footer>
@@ -2595,6 +2656,77 @@
     document.querySelectorAll('.hud-nav-link').forEach(l => {
       l.addEventListener('click', () => navMenu.classList.remove('mobile-open'));
     });
+
+    // ── CONTACT FORM SUBMISSION (WEB3FORMS AJAX) ──
+    const contactForm = document.getElementById('contact-form-element');
+    const contactToast = document.getElementById('contact-toast');
+
+    function showContactToast(message, isSuccess = true) {
+      if (!contactToast) return;
+      contactToast.textContent = message;
+      contactToast.className = isSuccess ? 'toast-success active' : 'toast-error active';
+      setTimeout(() => {
+        contactToast.classList.remove('active');
+      }, 5000);
+    }
+
+    if (contactForm) {
+      contactForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const submitBtn = contactForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn ? submitBtn.innerHTML : 'SEND TRANSMISSION 🚀';
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.style.opacity = '0.7';
+          submitBtn.style.cursor = 'not-allowed';
+          submitBtn.innerHTML = 'TRANSMITTING... ⏳';
+        }
+
+        try {
+          const formData = new FormData(contactForm);
+          const object = Object.fromEntries(formData);
+          const json = JSON.stringify(object);
+
+          const response = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: json
+          });
+
+          const result = await response.json();
+
+          if (response.status === 200 && result.success) {
+            showContactToast("Message sent successfully! I'll get back to you soon.", true);
+            contactForm.reset();
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          } else {
+            showContactToast(result.message || 'Failed to send message. Please try again.', false);
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.style.opacity = '1';
+              submitBtn.style.cursor = 'pointer';
+              submitBtn.innerHTML = originalBtnText;
+            }
+          }
+        } catch (error) {
+          console.error('Contact Form Error:', error);
+          showContactToast('Network error. Please check your connection and try again.', false);
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+            submitBtn.innerHTML = originalBtnText;
+          }
+        }
+      });
+    }
 
     // ── THREE.JS 3D WEBGL ENGINE (FULL-PAGE CYBER SNAKE & SPINE) ──
     const canvas3d = document.getElementById('webgl-canvas');
