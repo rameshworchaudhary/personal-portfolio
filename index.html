@@ -57,7 +57,7 @@
   <link rel="stylesheet" href="ishwor-assistant.css">
 
   <style>
-    /* ── DESIGN SYSTEM (MATCHING REFERENCE IMAGE 02_home.jpg) ── */
+    /* ── DESIGN SYSTEM (MATCHING REFERENCE UI) ── */
     :root {
       --bg-dark: #08090b;
       --bg-card: rgba(15, 17, 21, 0.42);
@@ -65,7 +65,7 @@
       --bg-subtle: rgba(22, 24, 31, 0.45);
       
       --accent-green: #00f076;
-      --accent-green-glow: rgba(0, 240, 118, 0.25);
+      --accent-green-glow: rgba(0, 240, 118, 0.28);
       --accent-green-subtle: rgba(0, 240, 118, 0.12);
       
       --text-white: #ffffff;
@@ -80,7 +80,7 @@
       --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
 
-      --container-width: 1240px;
+      --container-width: 1260px;
     }
 
     *, *::before, *::after {
@@ -97,7 +97,7 @@
     }
 
     body {
-      background-color: transparent;
+      background-color: var(--bg-dark);
       color: var(--text-white);
       font-family: var(--font-body);
       font-size: 15px;
@@ -120,7 +120,7 @@
       padding: 0 24px;
     }
 
-    /* ── FULLSCREEN BACKGROUND PHOTO LAYER ── */
+    /* ── FULLSCREEN BACKGROUND PHOTO LAYER (OPTIMIZED ZOOM & PROPORTIONS) ── */
     .fullscreen-photo-container {
       position: fixed;
       inset: 0;
@@ -130,31 +130,34 @@
       z-index: 0;
       pointer-events: none;
       overflow: hidden;
+      background-color: var(--bg-dark);
     }
 
     .fullscreen-photo-img {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
       width: 100%;
       height: 100%;
+      min-width: 100%;
+      min-height: 100%;
       object-fit: cover;
-      object-position: center 18%;
-      filter: contrast(1.02) brightness(1.0);
-      transform: translateZ(0);
-      will-change: transform;
+      object-position: center 16%;
+      filter: saturate(1.15) contrast(1.05) brightness(1.03);
     }
 
     .fullscreen-photo-overlay {
       position: absolute;
       inset: 0;
       background: 
-        /* Subtle side gradients for crisp text readability while keeping center face fully clear */
-        linear-gradient(90deg, rgba(8, 9, 11, 0.52) 0%, rgba(8, 9, 11, 0.20) 28%, rgba(8, 9, 11, 0.0) 50%, rgba(8, 9, 11, 0.20) 72%, rgba(8, 9, 11, 0.52) 100%),
-        /* Gentle top header blend and subtle base */
-        linear-gradient(to bottom, rgba(8, 9, 11, 0.45) 0%, transparent 14%, transparent 82%, rgba(8, 9, 11, 0.55) 100%);
+        /* Radial softness focused on center face with smooth vignette to preserve natural photo colors */
+        radial-gradient(ellipse 65% 65% at 50% 32%, transparent 0%, rgba(8, 9, 11, 0.3) 48%, rgba(8, 9, 11, 0.92) 88%, rgba(8, 9, 11, 0.98) 100%),
+        /* Lateral gradients: dark on left for text readability, clear in center, gentle on right */
+        linear-gradient(90deg, rgba(8, 9, 11, 0.94) 0%, rgba(8, 9, 11, 0.42) 28%, rgba(8, 9, 11, 0.0) 50%, rgba(8, 9, 11, 0.38) 72%, rgba(8, 9, 11, 0.94) 100%),
+        /* Top navbar shade and bottom fade to sub-hero strip */
+        linear-gradient(to bottom, rgba(8, 9, 11, 0.65) 0%, transparent 12%, transparent 62%, rgba(8, 9, 11, 0.98) 100%);
       pointer-events: none;
-    }
-
-    .fullscreen-photo-spotlight {
-      display: none;
     }
 
     /* ── HEADER / NAVIGATION ── */
@@ -162,7 +165,7 @@
       position: sticky;
       top: 0;
       width: 100%;
-      background: rgba(8, 9, 11, 0.65);
+      background: rgba(8, 9, 11, 0.72);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border-dark);
@@ -171,7 +174,7 @@
     }
 
     header.scrolled {
-      background: rgba(8, 9, 11, 0.88);
+      background: rgba(8, 9, 11, 0.92);
       border-bottom-color: rgba(255, 255, 255, 0.15);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     }
@@ -216,17 +219,36 @@
     }
 
     .nav-link {
+      position: relative;
       font-size: 14px;
       font-weight: 500;
       color: var(--text-gray);
+      padding: 6px 0;
       transition: color 0.2s ease;
       display: inline-flex;
       align-items: center;
       gap: 4px;
     }
 
-    .nav-link:hover, .nav-link.active {
+    .nav-link:hover {
       color: var(--text-white);
+    }
+
+    .nav-link.active {
+      color: var(--text-white);
+      font-weight: 600;
+    }
+
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent-green);
+      border-radius: 2px;
+      box-shadow: 0 0 8px var(--accent-green);
     }
 
     .nav-actions {
@@ -288,117 +310,77 @@
       z-index: 2;
       min-height: calc(100vh - 76px);
       min-height: calc(100dvh - 76px);
-      padding: 24px 0 20px;
+      padding: 28px 0 20px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      overflow: hidden;
+    }
+
+    .hero-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex-grow: 1;
     }
 
     .hero-grid {
       display: grid;
-      grid-template-columns: 1.15fr 0.9fr 1.15fr;
+      grid-template-columns: 1.22fr 0.9fr 0.88fr;
       align-items: center;
-      justify-content: center;
-      gap: 20px;
+      justify-content: space-between;
+      gap: 28px;
       position: relative;
       z-index: 2;
       width: 100%;
       margin: auto 0;
+      padding: 10px 0 16px;
     }
 
-    /* Left Column: Big Bold Typography (Left Shoulder) */
+    /* Left Column: Innovate Develop Succeed + Pitch & Action Buttons (Left Shoulder) */
     .hero-col-left {
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      align-items: flex-start;
       text-align: left;
-      z-index: 3;
+      z-index: 4;
     }
 
-    .hero-title-main {
+    .hero-build-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       font-family: var(--font-display);
-      font-size: clamp(44px, 5.5vw, 84px);
+      font-size: 14px;
       font-weight: 800;
-      line-height: 1.02;
-      letter-spacing: -1.5px;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
       text-transform: capitalize;
     }
 
-    .hero-title-solid {
-      display: block;
+    .hero-build-kicker .kicker-solid {
       color: var(--text-white);
-      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
     }
 
-    .hero-title-stroke {
-      display: block;
+    .hero-build-kicker .kicker-stroke {
       color: transparent;
-      -webkit-text-stroke: 2px var(--accent-green);
-      letter-spacing: -0.5px;
-      text-shadow: 0 0 25px rgba(0, 240, 118, 0.25);
-    }
-
-    /* Center Column: Open Stage with Status Badge (Centered between shoulders) */
-    .hero-col-center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-      min-height: clamp(340px, 48vh, 520px);
-      position: relative;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    /* Center Name Badge */
-    .hero-person-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: auto;
-      margin-bottom: 12px;
-      padding: 8px 16px;
-      border-radius: 50px;
-      background: rgba(15, 17, 21, 0.75);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-white);
-      white-space: nowrap;
-      pointer-events: auto;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    }
-
-    .hero-person-badge .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--accent-green);
-      box-shadow: 0 0 8px var(--accent-green);
-    }
-
-    /* Right Column: Pitch & Action Buttons (Right Shoulder) */
-    .hero-col-right {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      text-align: left;
-      z-index: 3;
-      padding-left: 10px;
+      -webkit-text-stroke: 1.5px var(--accent-green);
+      text-shadow: 0 0 16px rgba(0, 240, 118, 0.35);
     }
 
     .hero-subheadline {
       font-family: var(--font-display);
-      font-size: clamp(22px, 2.3vw, 32px);
-      font-weight: 700;
-      line-height: 1.22;
+      font-size: clamp(32px, 3.4vw, 52px);
+      font-weight: 800;
+      line-height: 1.12;
       color: var(--text-white);
-      margin-bottom: 14px;
-      letter-spacing: -0.3px;
-      text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+      margin-bottom: 16px;
+      letter-spacing: -0.8px;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95);
+    }
+
+    .hero-subheadline .accent-fast {
+      color: var(--accent-green);
+      text-shadow: 0 0 22px rgba(0, 240, 118, 0.45);
     }
 
     .hero-body-text {
@@ -406,66 +388,239 @@
       color: #d1d5db;
       line-height: 1.65;
       margin-bottom: 24px;
-      max-width: 380px;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+      max-width: 420px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
     }
 
     .hero-buttons-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       flex-wrap: wrap;
     }
 
-    .btn-hero-solid {
-      font-size: 13.5px;
-      font-weight: 600;
-      padding: 10px 22px;
+    .btn-hero-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 11px 22px;
       border-radius: 50px;
-      background: rgba(24, 27, 34, 0.9);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: var(--text-white);
-      transition: all 0.2s ease;
+      background: var(--accent-green);
+      color: #000;
+      border: none;
       cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 0 20px rgba(0, 240, 118, 0.3);
     }
 
-    .btn-hero-solid:hover {
-      background: rgba(34, 38, 48, 0.95);
-      border-color: rgba(255, 255, 255, 0.3);
+    .btn-hero-primary:hover {
+      background: #25ff8f;
+      box-shadow: 0 0 28px rgba(0, 240, 118, 0.55);
       transform: translateY(-2px);
     }
 
-    .btn-hero-outline {
-      font-size: 13.5px;
+    .btn-hero-primary .circle-arrow-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #000;
+      color: var(--accent-green);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .btn-hero-secondary {
+      font-family: var(--font-display);
+      font-size: 14px;
       font-weight: 600;
-      padding: 10px 22px;
+      padding: 11px 24px;
       border-radius: 50px;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(15, 17, 21, 0.6);
       backdrop-filter: blur(8px);
-      border: 1px solid var(--border-pill);
+      border: 1px solid rgba(255, 255, 255, 0.18);
       color: var(--text-white);
       transition: all 0.2s ease;
       cursor: pointer;
     }
 
-    .btn-hero-outline:hover {
-      background: var(--accent-green-subtle);
+    .btn-hero-secondary:hover {
+      background: rgba(25, 28, 36, 0.85);
       border-color: var(--accent-green);
+      transform: translateY(-2px);
+    }
+
+    /* Center Column: Open Stage for Middle Picture with Centered Name Badge */
+    .hero-col-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      min-height: auto;
+      height: 100%;
+      position: relative;
+      z-index: 3;
+      padding-bottom: 6px;
+    }
+
+    .hero-person-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 22px;
+      border-radius: 50px;
+      background: rgba(14, 17, 22, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(0, 240, 118, 0.38);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-white);
+      white-space: nowrap;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.75), 0 0 20px rgba(0, 240, 118, 0.18);
+      transition: all 0.25s ease;
+    }
+
+    .hero-person-badge:hover {
+      border-color: var(--accent-green);
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.85), 0 0 28px rgba(0, 240, 118, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .hero-person-badge .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
+    }
+
+    .hero-person-badge .badge-name {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .hero-person-badge .badge-role {
+      color: var(--text-gray);
+      font-weight: 500;
+    }
+
+    /* Right Column: Portrait Card + Social Connect (Right Shoulder) */
+    .hero-col-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      z-index: 4;
+    }
+
+    .hero-portrait-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 290px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .hero-portrait-card {
+      position: relative;
+      width: 100%;
+      background: rgba(12, 14, 18, 0.7);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--accent-green);
+      box-shadow: 0 0 30px rgba(0, 240, 118, 0.25), inset 0 0 15px rgba(0, 240, 118, 0.06);
+      border-radius: 24px;
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .portrait-status-dot {
+      position: absolute;
+      top: 22px;
+      left: 22px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 12px var(--accent-green);
+      z-index: 10;
+    }
+
+    .hero-portrait-img {
+      width: 100%;
+      height: 350px;
+      object-fit: cover;
+      object-position: center 18%;
+      border-radius: 18px;
+      display: block;
+      filter: saturate(1.1) contrast(1.03) brightness(1.02);
+    }
+
+    .hero-connect-block {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-connect-label {
+      font-size: 13.5px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .hero-connect-icons {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .social-icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(15, 17, 21, 0.65);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-gray);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .social-icon-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .social-icon-btn:hover {
+      color: var(--text-white);
+      border-color: var(--accent-green);
+      background: var(--accent-green-subtle);
       box-shadow: 0 0 14px var(--accent-green-glow);
       transform: translateY(-2px);
     }
 
-    /* Bottom Bar in Hero */
-    .hero-bottom-bar {
-      margin-top: 40px;
-      padding-top: 22px;
+    /* Sub-Hero Strip (Bottom of Hero) */
+    .hero-bottom-strip {
+      margin-top: 20px;
+      padding-top: 16px;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
       gap: 20px;
+      flex-wrap: wrap;
       position: relative;
       z-index: 2;
     }
@@ -473,51 +628,83 @@
     .hero-tagline-quote {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 13.5px;
-      color: #e5e7eb;
-      max-width: 480px;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+      gap: 14px;
+      max-width: 460px;
     }
 
     .hero-tagline-quote .green-bar {
       width: 3px;
-      height: 28px;
+      height: 32px;
       background: var(--accent-green);
       border-radius: 2px;
       flex-shrink: 0;
-      box-shadow: 0 0 8px var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
     }
 
-    .hero-social-links {
+    .hero-tagline-quote .quote-text {
+      font-size: 13.5px;
+      color: #e5e7eb;
+      line-height: 1.5;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .hero-stats-panel {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 18px;
+      background: rgba(14, 17, 22, 0.65);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 10px 20px;
     }
 
-    .hero-social-item {
-      display: inline-flex;
+    .stat-pill-item {
+      display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 13.5px;
-      font-weight: 500;
-      color: #d1d5db;
-      transition: color 0.2s ease;
+      gap: 12px;
+      padding: 4px 10px;
     }
 
-    .hero-social-item:hover {
-      color: var(--accent-green);
+    .stat-pill-item:not(:last-child) {
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      padding-right: 18px;
     }
 
-    .hero-social-item svg {
-      width: 16px;
-      height: 16px;
-      fill: currentColor;
+    .stat-icon-wrapper {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(0, 240, 118, 0.08);
+      border: 1px solid rgba(0, 240, 118, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stat-content {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-white);
+      line-height: 1.1;
     }
 
     /* ── SCROLLING SECTIONS (IMMERSIVE TRANSLUCENCY OVER FULLSCREEN PHOTO) ── */
     section {
-      padding: 90px 0;
+      padding: 60px 0;
       position: relative;
       z-index: 2;
     }
@@ -530,7 +717,7 @@
     }
 
     .section-header {
-      margin-bottom: 44px;
+      margin-bottom: 28px;
     }
 
     .section-tag {
@@ -562,6 +749,12 @@
       color: var(--text-white);
       line-height: 1.2;
       text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+    }
+
+    .timeline-single-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 22px;
     }
 
     /* ── PROJECTS SECTION ── */
@@ -1162,19 +1355,37 @@
     /* ── RESPONSIVE ADAPTATIONS (DESKTOP TO MOBILE) ── */
     @media (max-width: 1024px) {
       .hero-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 28px;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 32px;
       }
 
       .hero-col-center {
         grid-column: span 2;
-        order: 2;
-        min-height: auto;
-        margin: 16px 0;
+        order: 3;
+        padding-right: 0;
+        margin-top: 10px;
       }
 
-      .about-layout, .timeline-grid, .contact-layout {
+      .hero-col-right {
+        order: 2;
+        justify-content: center;
+      }
+
+      .hero-portrait-card {
+        max-width: 260px;
+      }
+
+      .hero-portrait-img {
+        height: 300px;
+      }
+
+      .about-layout, .contact-layout {
         grid-template-columns: 1fr;
+      }
+
+      .hero-stats-panel {
+        flex-wrap: wrap;
+        justify-content: center;
       }
     }
 
@@ -1222,25 +1433,37 @@
         display: flex;
         flex-direction: column;
         text-align: center;
-        gap: 18px;
-      }
-
-      .hero-col-left {
-        align-items: center;
-        text-align: center;
+        gap: 20px;
       }
 
       .hero-col-center {
         order: 1;
+        align-items: center;
+        text-align: center;
+        padding-right: 0;
         min-height: auto;
-        margin: 8px 0;
+        margin-bottom: 4px;
+      }
+
+      .hero-col-left {
+        order: 2;
+        align-items: center;
+        text-align: center;
       }
 
       .hero-col-right {
-        order: 2;
-        padding-left: 0;
+        order: 3;
         align-items: center;
         text-align: center;
+        margin-top: 6px;
+      }
+
+      .hero-portrait-card {
+        max-width: 240px;
+      }
+
+      .hero-portrait-img {
+        height: 280px;
       }
 
       .hero-body-text {
@@ -1251,18 +1474,28 @@
         justify-content: center;
       }
 
-      .hero-tagline-quote {
-        text-align: left;
-      }
-
-      .hero-bottom-bar {
-        justify-content: center;
+      .hero-bottom-strip {
+        flex-direction: column;
+        align-items: center;
         text-align: center;
       }
 
-      .hero-social-links {
+      .hero-tagline-quote {
+        text-align: center;
         justify-content: center;
+      }
+
+      .hero-stats-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
         width: 100%;
+        padding: 16px;
+      }
+
+      .stat-pill-item:not(:last-child) {
+        border-right: none;
+        padding-right: 0;
       }
 
       .projects-grid {
@@ -1271,6 +1504,49 @@
 
       .about-metrics-grid {
         grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 0 16px;
+      }
+
+      .btn-start-project {
+        padding: 7px 14px;
+        font-size: 12.5px;
+      }
+
+      .btn-start-project .circle-arrow {
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+      }
+
+      .hero-subheadline {
+        font-size: 28px;
+      }
+
+      .hero-buttons-row {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .btn-hero-primary, .btn-hero-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .hero-stats-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-person-badge {
+        padding: 8px 14px;
+        font-size: 12px;
+        max-width: 100%;
+        white-space: normal;
+        text-align: center;
       }
     }
   </style>
@@ -1311,8 +1587,8 @@
 
       <!-- Action Button -->
       <div class="nav-actions">
-        <a href="https://drive.google.com/file/d/1uo231O5QoB2iW9cbs0JiO3voDML1tCNu/view?usp=sharing" target="_blank" rel="noopener" class="btn-start-project">
-          <span>Start a Project</span>
+        <a href="https://drive.google.com/file/d/1uo231O5QoB2iW9cbs0JiO3voDML1tCNu/view?usp=sharing" target="_blank" rel="noopener" class="btn-start-project" title="View Resume">
+          <span>Resume</span>
           <span class="circle-arrow">↗</span>
         </a>
         <button class="mobile-menu-btn" id="mobile-toggle" aria-label="Toggle Menu">☰</button>
@@ -1325,66 +1601,124 @@
 
     <!-- HERO SECTION -->
     <section id="hero">
-      <div class="container">
+      <div class="container hero-container">
         <div class="hero-grid">
 
-          <!-- Left Column: Big Bold Typography (Left Shoulder) -->
+          <!-- Left Column: Innovate Develop Succeed + Pitch & Action Buttons (Left Shoulder) -->
           <div class="hero-col-left">
-            <h1 class="hero-title-main">
-              <span class="hero-title-solid">Build</span>
-              <span class="hero-title-stroke">Digital</span>
-              <span class="hero-title-solid">Futures</span>
-            </h1>
-          </div>
-
-          <!-- Center Column: Open Center for Full-Screen Portrait View with Status Pill -->
-          <div class="hero-col-center">
-            <div class="hero-person-badge">
-              <span class="status-dot"></span>
-              <span>Rameshwor Chaudhary · AI/ML Engineer & Developer</span>
+            <div class="hero-build-kicker">
+              <span class="kicker-solid">Build</span>
+              <span class="kicker-stroke">Digital</span>
+              <span class="kicker-solid">Futures</span>
             </div>
-          </div>
-
-          <!-- Right Column: Subheadline & CTAs (Right Shoulder) -->
-          <div class="hero-col-right">
-            <h2 class="hero-subheadline">
-              Innovate. Develop.<br/>Succeed. Fast.
-            </h2>
+            <h1 class="hero-subheadline">
+              Innovate.<br/>Develop.<br/>Succeed. <span class="accent-fast">Fast.</span>
+            </h1>
             <p class="hero-body-text">
               Transforming complex engineering concepts into intelligent AI models, computer vision systems, and robust full-stack software tailored for real-world impact.
             </p>
             <div class="hero-buttons-row">
-              <a href="#contact" class="btn-hero-solid">
-                Get a Free Quote
+              <a href="#contact" class="btn-hero-primary">
+                <span>Get a Free Quote</span>
+                <span class="circle-arrow-icon">↗</span>
               </a>
-              <a href="#projects" class="btn-hero-outline">
+              <a href="#projects" class="btn-hero-secondary">
                 Our Services
               </a>
             </div>
           </div>
 
-        </div>
-
-        <!-- Bottom Row (Quotes & Social Links) -->
-        <div class="hero-bottom-bar">
-          <div class="hero-tagline-quote">
-            <span class="green-bar"></span>
-            <span>Dedicated to engineering intelligent machine learning pipelines and reliable digital products that scale.</span>
+          <!-- Center Column: Open Stage for Middle Picture with Centered Name Badge -->
+          <div class="hero-col-center">
+            <div class="hero-person-badge">
+              <span class="status-dot"></span>
+              <span class="badge-name">Rameshwor Chaudhary</span>
+              <span class="badge-role">· AI/ML Engineer & Developer</span>
+            </div>
           </div>
 
-          <div class="hero-social-links">
-            <a href="https://github.com/rameshworchaudhary" target="_blank" rel="noopener" class="hero-social-item">
-              <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-              <span>Github</span>
-            </a>
-            <a href="https://www.linkedin.com/in/chaudhari-ishwor/" target="_blank" rel="noopener" class="hero-social-item">
-              <svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-              <span>Linkedin</span>
-            </a>
-            <button class="hero-social-item" id="copy-email-btn" style="background:none;border:none;cursor:pointer;">
-              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-              <span>Email</span>
-            </button>
+          <!-- Right Column: Small Rounded Portrait Card & Social Links (Right Shoulder) -->
+          <div class="hero-col-right">
+            <div class="hero-portrait-wrapper">
+              <div class="hero-portrait-card">
+                <span class="portrait-status-dot"></span>
+                <img 
+                  src="ishwor.jpeg" 
+                  alt="Rameshwor Chaudhary Portrait" 
+                  class="hero-portrait-img"
+                  onerror="this.src='rameshwor_hero.jpg'"
+                />
+              </div>
+            </div>
+
+            <div class="hero-connect-block">
+              <span class="hero-connect-label">Connect with me</span>
+              <div class="hero-connect-icons">
+                <a href="https://github.com/rameshworchaudhary" target="_blank" rel="noopener" class="social-icon-btn" title="GitHub">
+                  <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                </a>
+                <a href="https://www.linkedin.com/in/chaudhari-ishwor/" target="_blank" rel="noopener" class="social-icon-btn" title="LinkedIn">
+                  <svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                </a>
+                <a href="https://instagram.com" target="_blank" rel="noopener" class="social-icon-btn" title="Instagram">
+                  <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                </a>
+                <button class="social-icon-btn" id="copy-email-btn" title="Copy Email">
+                  <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Sub-Hero Strip: Tagline Quote on Left & Stats Panel on Right -->
+        <div class="hero-bottom-strip">
+          <div class="hero-tagline-quote">
+            <span class="green-bar"></span>
+            <span class="quote-text">Dedicated to engineering intelligent machine learning pipelines and reliable digital products that scale.</span>
+          </div>
+
+          <div class="hero-stats-panel">
+            <div class="stat-pill-item">
+              <div class="stat-icon-wrapper">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">PROJECTS</span>
+                <span class="stat-value">5+</span>
+              </div>
+            </div>
+
+            <div class="stat-pill-item">
+              <div class="stat-icon-wrapper">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">TECH STACK</span>
+                <span class="stat-value">5+</span>
+              </div>
+            </div>
+
+            <div class="stat-pill-item">
+              <div class="stat-icon-wrapper">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">EXPERIENCE</span>
+                <span class="stat-value">1.5+ Yrs</span>
+              </div>
+            </div>
+
+            <div class="stat-pill-item">
+              <div class="stat-icon-wrapper">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">CLIENTS</span>
+                <span class="stat-value">2+</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1519,82 +1853,86 @@
       </div>
     </section>
 
-    <!-- EXPERIENCE & EDUCATION SECTION -->
-    <section id="journey">
+    <!-- EXPERIENCE SECTION (SEPARATE SECTION) -->
+    <section id="experience">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">Career History</span>
-          <h2 class="section-title">Experience & Academic Background</h2>
+          <span class="section-tag">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            Experience
+          </span>
+          <h2 class="section-title">My professional journey and work experience.</h2>
         </div>
 
-        <div class="timeline-grid">
-          <!-- Work Experience -->
-          <div class="timeline-column">
-            <h3 style="font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text-white); margin-bottom: 8px;">
-              Virtual & Industry Experience
-            </h3>
-
-            <div class="timeline-item">
-              <div class="timeline-top">
-                <span class="timeline-title">Data Analytics Virtual Experience</span>
-                <span class="timeline-date">2026</span>
-              </div>
-              <div class="timeline-subtitle">Quantium (via Forage)</div>
-              <p class="timeline-desc">
-                Conducted transaction data analysis, benchmark testing, and customer segmentation to produce data-backed strategic recommendations.
-              </p>
+        <div class="timeline-single-grid">
+          <div class="timeline-item">
+            <div class="timeline-top">
+              <span class="timeline-title">Data Analytics Virtual Experience</span>
+              <span class="timeline-date">2026</span>
             </div>
-
-            <div class="timeline-item">
-              <div class="timeline-top">
-                <span class="timeline-title">Data Science Virtual Experience</span>
-                <span class="timeline-date">2026</span>
-              </div>
-              <div class="timeline-subtitle">BCG X (via Forage)</div>
-              <p class="timeline-desc">
-                Performed exploratory data analysis, built machine learning churn prediction pipelines, and developed strategic commercial models.
-              </p>
-            </div>
+            <div class="timeline-subtitle">Quantium (via Forage)</div>
+            <p class="timeline-desc">
+              Conducted transaction data analysis, benchmark testing, and customer segmentation to produce data-backed strategic recommendations.
+            </p>
           </div>
 
-          <!-- Education -->
-          <div class="timeline-column" id="education">
-            <h3 style="font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text-white); margin-bottom: 8px;">
-              Education
-            </h3>
-
-            <div class="timeline-item">
-              <div class="timeline-top">
-                <span class="timeline-title">B.E. Computer Science (AI/ML)</span>
-                <span class="timeline-date">2026 — Present</span>
-              </div>
-              <div class="timeline-subtitle">Chandigarh University · CGPA 8.42 / 10</div>
-              <p class="timeline-desc">
-                Specialized in Machine Learning algorithms, Computer Vision pipelines, Data Structures, and scalable Web systems.
-              </p>
+          <div class="timeline-item">
+            <div class="timeline-top">
+              <span class="timeline-title">Data Science Virtual Experience</span>
+              <span class="timeline-date">2026</span>
             </div>
+            <div class="timeline-subtitle">BCG X (via Forage)</div>
+            <p class="timeline-desc">
+              Performed exploratory data analysis, built machine learning churn prediction pipelines, and developed strategic commercial models.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-            <div class="timeline-item">
-              <div class="timeline-top">
-                <span class="timeline-title">Higher Secondary (Science)</span>
-                <span class="timeline-date">2022 — 2024</span>
-              </div>
-              <div class="timeline-subtitle">Nobel Academy</div>
-              <p class="timeline-desc">
-                Graduated with distinction in Physics, Chemistry, Mathematics, and Computer Science.
-              </p>
-            </div>
+    <!-- EDUCATION SECTION (SEPARATE SECTION) -->
+    <section id="education">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            Education
+          </span>
+          <h2 class="section-title">My academic journey and qualifications.</h2>
+        </div>
 
-            <div class="timeline-item">
-              <div class="timeline-top">
-                <span class="timeline-title">Secondary Education</span>
-                <span class="timeline-date">2010 — 2022</span>
-              </div>
-              <div class="timeline-subtitle">Himchuli Academy</div>
-              <p class="timeline-desc">
-                Foundational education with academic honors in STEM disciplines.
-              </p>
+        <div class="timeline-single-grid">
+          <div class="timeline-item">
+            <div class="timeline-top">
+              <span class="timeline-title">B.E. Computer Science (AI/ML)</span>
+              <span class="timeline-date">2026 — Present</span>
             </div>
+            <div class="timeline-subtitle">Chandigarh University · CGPA 8.42 / 10</div>
+            <p class="timeline-desc">
+              Specialized in Machine Learning algorithms, Computer Vision pipelines, Data Structures, and scalable Web systems.
+            </p>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-top">
+              <span class="timeline-title">Higher Secondary (Science)</span>
+              <span class="timeline-date">2022 — 2024</span>
+            </div>
+            <div class="timeline-subtitle">Nobel Academy</div>
+            <p class="timeline-desc">
+              Graduated with distinction in Physics, Chemistry, Mathematics, and Computer Science.
+            </p>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-top">
+              <span class="timeline-title">Secondary Education</span>
+              <span class="timeline-date">2010 — 2022</span>
+            </div>
+            <div class="timeline-subtitle">Himchuli Academy</div>
+            <p class="timeline-desc">
+              Foundational education with academic honors in STEM disciplines.
+            </p>
           </div>
         </div>
       </div>
