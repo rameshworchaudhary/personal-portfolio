@@ -501,8 +501,8 @@
         <p>I'm <strong>Rameshwor Chaudhary</strong> — AI & ML Developer.</p>
       `;
       const titleEl = hero.querySelector('.hero-title-main');
-      if (titleEl) {
-        hero.insertBefore(greetingEl, titleEl);
+      if (titleEl && titleEl.parentNode) {
+        titleEl.parentNode.insertBefore(greetingEl, titleEl);
       } else {
         hero.prepend(greetingEl);
       }

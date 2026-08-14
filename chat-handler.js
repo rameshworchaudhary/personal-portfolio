@@ -1,5 +1,20 @@
 import dotenv from 'dotenv';
+import { GoogleGenAI } from '@google/genai';
+
 dotenv.config();
+
+let geminiClient = null;
+
+function getGeminiClient() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey.trim() === '' || apiKey.includes('your_gemini_api_key')) {
+    return null;
+  }
+  if (!geminiClient) {
+    geminiClient = new GoogleGenAI({ apiKey: apiKey.trim() });
+  }
+  return geminiClient;
+}
 
 const SYSTEM_PROMPT = `You are Ishwor, the official AI Voice Assistant for Rameshwor Chaudhary's portfolio.
 Your goal is to answer questions about Rameshwor Chaudhary's profile, education, skills, projects, research, and contact details, as well as general technology, AI, computer science, and educational queries.
@@ -90,15 +105,48 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 7000) {
 }
 
 export async function getChatReply(message, history = []) {
-  const apiKey = process.env.GROQ_API_KEY;
+  // 1. Try Google Gemini API if GEMINI_API_KEY is available
+  const gemini = getGeminiClient();
+  if (gemini) {
+    try {
+      const contents = [
+        ...history.slice(-6).map(item => ({
+          role: item.role === 'user' ? 'user' : 'model',
+          parts: [{ text: item.content }]
+        })),
+        {
+          role: 'user',
+          parts: [{ text: message }]
+        }
+      ];
 
-  if (apiKey && apiKey.trim() !== '' && !apiKey.includes('your_groq_api_key')) {
+      const response = await gemini.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents,
+        config: {
+          systemInstruction: SYSTEM_PROMPT,
+          temperature: 0.6,
+          maxOutputTokens: 300
+        }
+      });
+
+      if (response && response.text) {
+        return response.text;
+      }
+    } catch (geminiError) {
+      console.error('Gemini API Error:', geminiError);
+    }
+  }
+
+  // 2. Try Groq API if GROQ_API_KEY is available
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey && groqKey.trim() !== '' && !groqKey.includes('your_groq_api_key')) {
     try {
       const response = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey.trim()}`
+          'Authorization': `Bearer ${groqKey.trim()}`
         },
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
@@ -123,5 +171,6 @@ export async function getChatReply(message, history = []) {
     }
   }
 
+  // 3. Fallback response for offline or unconfigured states
   return getFallbackResponse(message);
 }
