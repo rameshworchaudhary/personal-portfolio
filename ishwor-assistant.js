@@ -250,10 +250,50 @@
     const voices = window.speechSynthesis.getVoices();
     if (!voices || voices.length === 0) return null;
 
+    // Prioritize natural Indian English / Hindi voices (e.g., en-IN, hi-IN, Google हिन्दी, Rishi, Neerja, Prabhat, etc.)
     return voices.find(v => 
+      (v.lang === 'en-IN' || v.lang === 'hi-IN' || v.lang.startsWith('en_IN') || v.lang.startsWith('hi_IN')) &&
+      (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Rishi') || v.name.includes('Neerja') || v.name.includes('Prabhat'))
+    ) || voices.find(v => 
+      v.lang === 'en-IN' || v.lang === 'hi-IN' || v.lang.startsWith('en_IN') || v.lang.startsWith('hi_IN')
+    ) || voices.find(v => 
       (v.lang.startsWith('en') || v.lang.startsWith('hi')) && 
-      (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('David') || v.name.includes('Rishi'))
+      (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Rishi') || v.name.includes('Samantha'))
     ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+  }
+
+  // Clean and prepare text for SpeechSynthesis with phonetic corrections
+  function prepareSpeechText(text) {
+    if (!text) return '';
+    let speech = text
+      .replace(/[\*\_\`\#]/g, '')
+      .replace(/<[^>]*>?/gm, '')
+      .replace(/https?:\/\/\S+/g, '')
+      // Fix ML being pronounced as milliliter / ml
+      .replace(/\bAI[\s\/\\&]+ML\b/gi, 'AI and Machine Learning')
+      .replace(/\bAI\/ML\b/gi, 'AI and Machine Learning')
+      .replace(/\bAI&ML\b/gi, 'AI and Machine Learning')
+      .replace(/\bML\b/g, 'Machine Learning')
+      .replace(/\bml\b/g, 'Machine Learning')
+      // Fix AI abbreviation
+      .replace(/\bAI\b/g, 'A.I.')
+      // Fix C++
+      .replace(/C\+\+/g, 'C plus plus')
+      // Fix B.E. / CU
+      .replace(/\bB\.?E\.?\b/gi, 'B E')
+      .replace(/\bCU\b/g, 'C U')
+      // Fix common tech acronyms
+      .replace(/\bUI\/UX\b/gi, 'U.I. and U.X.')
+      .replace(/\bRAG\b/g, 'R A G')
+      .replace(/\bLLMs\b/g, 'L L Ms')
+      .replace(/\bLLM\b/g, 'L L M')
+      .replace(/\bNLP\b/g, 'N L P')
+      .replace(/\b3D\b/gi, '3-D')
+      // Remove extra whitespace
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return speech;
   }
 
   // Speech Synthesis
@@ -272,15 +312,14 @@
     isSpeaking = true;
     setStatus('speaking', 'Speaking...');
 
-    const plainText = text
-      .replace(/[\*\_\`\#]/g, '')
-      .replace(/<[^>]*>?/gm, '')
-      .replace(/https?:\/\/\S+/g, '')
-      .trim();
+    const speechText = prepareSpeechText(text);
+    if (!speechText) {
+      isSpeaking = false;
+      setStatus('', 'Idle');
+      return;
+    }
 
-    if (!plainText) return;
-
-    const utterance = new SpeechSynthesisUtterance(plainText);
+    const utterance = new SpeechSynthesisUtterance(speechText);
 
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
@@ -483,36 +522,6 @@
     }, 50);
   }
 
-  function showAutoGreeting() {
-    if (autoGreetingShown) return;
-    autoGreetingShown = true;
-
-    const hero = document.getElementById('hero');
-    if (!hero) return;
-
-    let greetingEl = document.getElementById('hero-auto-greeting');
-    if (!greetingEl) {
-      greetingEl = document.createElement('div');
-      greetingEl.id = 'hero-auto-greeting';
-      greetingEl.className = 'hero-auto-greeting';
-      greetingEl.setAttribute('aria-live', 'polite');
-      greetingEl.innerHTML = `
-        <p>Hey! 👋 Welcome to Rameshwor Chaudhary's portfolio.</p>
-        <p>I'm <strong>Rameshwor Chaudhary</strong> — AI & ML Developer.</p>
-      `;
-      const titleEl = hero.querySelector('.hero-title-main');
-      if (titleEl && titleEl.parentNode) {
-        titleEl.parentNode.insertBefore(greetingEl, titleEl);
-      } else {
-        hero.prepend(greetingEl);
-      }
-    }
-
-    requestAnimationFrame(() => {
-      greetingEl.classList.add('visible');
-    });
-  }
-
   // Play Welcome Greeting
   function playWelcomeGreeting(force) {
     if (greetingPlayed && !force) return;
@@ -535,7 +544,7 @@
   function triggerGreetingUtterance(force) {
     if (isMuted) return;
 
-    const utterance = new SpeechSynthesisUtterance(GREETING_TEXT);
+    const utterance = new SpeechSynthesisUtterance(prepareSpeechText(GREETING_TEXT));
     utterance.rate = 1.0;
 
     const voice = getBestVoice();
@@ -580,7 +589,6 @@
 
   function scheduleAutoGreeting() {
     setTimeout(() => {
-      showAutoGreeting();
       playWelcomeGreeting(false);
     }, 800);
   }

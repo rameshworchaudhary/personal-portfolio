@@ -10,10 +10,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
-if (process.env.PORT && Number.isNaN(Number(process.env.PORT))) {
-  console.warn('Invalid PORT env value, falling back to 3000');
-}
+const rawPort = String(process.env.PORT || '').trim();
+const parsedPort = parseInt(rawPort, 10);
+const PORT = !isNaN(parsedPort) && parsedPort > 0 ? parsedPort : 3000;
 
 // Redirect non-www domain to canonical www domain
 app.use((req, res, next) => {

@@ -29,7 +29,7 @@ The website highlights projects, skills, education, achievements, and research w
 
 ### AI
 
-* Groq API
+* Nemotron 3 Ultra API
 * Text-to-Speech
 * Speech Recognition (where supported)
 
@@ -70,7 +70,7 @@ Capabilities include:
 
 # Backend
 
-The backend securely communicates with the Groq API.
+The backend securely communicates with the Nemotron 3 Ultra API (NVIDIA NIM / OpenAI-compatible endpoint).
 
 The API key must remain server-side and should never be exposed to the frontend.
 
@@ -79,7 +79,7 @@ Environment variables are loaded using `.env`.
 Example:
 
 ```env
-GROQ_API_KEY=your_groq_api_key
+NEMOTRON_API_KEY=your_nemotron_api_key
 PORT=3000
 ```
 
