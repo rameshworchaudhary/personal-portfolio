@@ -29,7 +29,8 @@ The website highlights projects, skills, education, achievements, and research w
 
 ### AI
 
-* Nemotron 3 Ultra API
+* Groq API (openai/gpt-oss-120b — Primary)
+* NVIDIA Nemotron API (Fallback)
 * Text-to-Speech
 * Speech Recognition (where supported)
 
@@ -70,16 +71,19 @@ Capabilities include:
 
 # Backend
 
-The backend securely communicates with the Nemotron 3 Ultra API (NVIDIA NIM / OpenAI-compatible endpoint).
+The backend securely communicates with Groq (Primary) and NVIDIA Nemotron (Fallback).
 
-The API key must remain server-side and should never be exposed to the frontend.
+All API keys remain server-side and are never exposed to the frontend.
 
 Environment variables are loaded using `.env`.
 
 Example:
 
 ```env
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=openai/gpt-oss-120b
 NEMOTRON_API_KEY=your_nemotron_api_key
+NEMOTRON_MODEL=nvidia/nemotron-3-ultra
 PORT=3000
 ```
 

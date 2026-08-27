@@ -10,9 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const rawPort = String(process.env.PORT || '').trim();
-const parsedPort = parseInt(rawPort, 10);
-const PORT = !isNaN(parsedPort) && parsedPort > 0 ? parsedPort : 3000;
+const PORT = 3000;
 
 // Redirect non-www domain to canonical www domain
 app.use((req, res, next) => {

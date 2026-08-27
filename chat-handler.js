@@ -18,101 +18,114 @@ KNOWLEDGE BASE:
 - Education: B.E. in Computer Science & Engineering (Specialization in AI & ML) at Chandigarh University (CU), Punjab, India.
 - Core Skills: Python, C++, JavaScript, TypeScript, PyTorch, TensorFlow, OpenCV, RAG, LLMs, Computer Vision, FastAPI, React, Node.js, Express, Three.js, Docker, GCP.
 - Key Projects:
-  1. Exam Mind AI: Adaptive AI exam prep and study platform.
-  2. Doc Intel RAG Chatbot: Document search & QA pipeline using vector embeddings.
+  1. Exam Mind AI: Adaptive AI exam prep and study platform with interactive question generation.
+  2. Doc Intel RAG Chatbot: Document search & QA pipeline using vector embeddings and LLM retrieval.
   3. AI Resume Builder: Smart ATS-optimized resume generator.
-  4. Ishwor AI Voice Assistant: Real-time multi-lingual voice companion.
+  4. Ishwor AI Voice Assistant: Real-time multi-lingual voice companion with speech recognition & synthesis.
   5. 3D Digital Lab Portfolio: WebGL interactive portfolio with physics and blueprints.
-- Contact: Email: chaudharyishwor143@gmail.com | GitHub: rameshworchaudhary | LinkedIn: in/rameshworchaudhary
+- Contact: Email: chaudharyishwor143@gmail.com | GitHub: rameshworchaudhary | LinkedIn: in/chaudhari-ishwor
 - Status: Open for AI/ML engineering roles, internships, and research collaborations.`;
 
+/**
+ * Intelligent Contextual Offline Fallback
+ * Provides accurate, helpful answers based on portfolio context and general tech concepts
+ */
 function getOfflineResponse(userMsg) {
   const q = (userMsg || '').toLowerCase().trim();
 
   // Greetings
-  if (/\b(hi|hello|hey|namaste|pranam|hola|kasa ho|kaisa hai|kem cho|good morning|good evening)\b/i.test(q)) {
-    return "Namaste! Main Ishwor hoon, Rameshwor ka AI voice companion. Aapko Rameshwor ke projects, AI/ML skills ya kisi tech topic ke baare mein kya jaanna hai?";
+  if (/\b(hi|hello|hey|namaste|pranam|hola|kasa ho|kaisa hai|kem cho|good morning|good evening|good afternoon|hiya|yo)\b/i.test(q)) {
+    return "Namaste! Main Ishwor hoon, Rameshwor Chaudhary ka AI voice assistant. Aap Rameshwor ke projects, AI/ML skills, education ya kisi bhi tech topic ke baare mein pooch sakte hain!";
   }
 
   // Model / identity query
-  if (q.includes('kaun sa model') || q.includes('which model') || q.includes('what model') || q.includes('who made you')) {
-    return "Main Ishwor AI assistant hoon, powered by NVIDIA Nemotron 3 Ultra with high-speed Groq fallback, specially tuned for Rameshwor Chaudhary's portfolio!";
+  if (q.includes('kaun sa model') || q.includes('which model') || q.includes('what model') || q.includes('who made you') || q.includes('model used') || q.includes('architecture')) {
+    return "Main Ishwor AI voice assistant hoon, primary powered by Groq GPT-OSS 120B with NVIDIA Nemotron fallback, specially customized for Rameshwor Chaudhary's portfolio!";
   }
 
   // Identity / Assistant Info
-  if (q.includes('who are you') || q.includes('aap kaun ho') || q.includes('tum kaun') || q.includes('your name') || q.includes('tera naam')) {
-    return "Main Ishwor hoon, Rameshwor Chaudhary ka intelligent AI voice assistant. Main portfolio visitors ko unke work aur general tech queries mein guide karta hoon.";
+  if (q.includes('who are you') || q.includes('aap kaun ho') || q.includes('tum kaun') || q.includes('your name') || q.includes('tera naam') || q.includes('what are you')) {
+    return "I am Ishwor, the intelligent AI voice assistant for Rameshwor Chaudhary's portfolio. I can help you explore his AI/ML projects, skills, education, and answer any tech questions.";
+  }
+
+  // Specific AI / ML Concepts & Questions
+  if (q.includes('what is machine learning') || q.includes('what is ml') || q.includes('ml kya hai') || q.includes('define machine learning') || q.includes('machine learning')) {
+    return "Machine Learning is a subset of AI where algorithms learn patterns directly from data to make predictions or decisions without being explicitly programmed for every rule. Rameshwor uses PyTorch and Scikit-Learn to build custom ML models.";
+  }
+  if (q.includes('what is artificial intelligence') || q.includes('what is ai') || q.includes('ai kya hai') || q.includes('define ai') || q.includes('generative ai')) {
+    return "Artificial Intelligence is the science of creating computer systems capable of performing tasks that typically require human intelligence, such as reasoning, visual perception, decision-making, and natural language understanding.";
+  }
+  if (q.includes('neural network') || q.includes('neural') || q.includes('deep learning') || q.includes('cnn') || q.includes('rnn') || q.includes('transformer')) {
+    return "Neural networks are computational models inspired by biological neurons in the human brain, composed of interconnected layers that process complex representations. Rameshwor builds and trains custom neural architectures using PyTorch!";
+  }
+  if (q.includes('what is rag') || q.includes('retrieval augmented generation') || q.includes('rag kya hai') || q.includes('rag pipeline')) {
+    return "RAG (Retrieval-Augmented Generation) connects Large Language Models to external vector databases, allowing AI models to retrieve relevant documents and produce accurate, grounded answers without hallucinations.";
+  }
+  if (q.includes('what is computer vision') || q.includes('computer vision') || q.includes('opencv')) {
+    return "Computer Vision enables software to process and understand visual data like photos and real-time video streams. Rameshwor develops CV pipelines for object detection, segmentation, and feature extraction using OpenCV and PyTorch.";
+  }
+  if (q.includes('what is nlp') || q.includes('natural language processing') || q.includes('llm') || q.includes('large language model')) {
+    return "Natural Language Processing (NLP) enables computers to analyze, understand, and generate human language. Rameshwor works extensively with transformer models, tokenization, semantic embeddings, and LLM integrations.";
+  }
+  if (q.includes('python')) {
+    return "Python is Rameshwor's primary language for developing AI models, data pipelines, PyTorch neural networks, computer vision tools, and backend APIs with FastAPI and Flask.";
+  }
+  if (q.includes('three.js') || q.includes('threejs') || q.includes('webgl') || q.includes('3d')) {
+    return "Three.js is a lightweight 3D library built on WebGL. Rameshwor uses Three.js and custom shaders to craft interactive 3D digital labs and particle canvas animations for modern web experiences.";
+  }
+  if (q.includes('docker') || q.includes('container')) {
+    return "Docker allows developers to package applications and their dependencies into lightweight containers, ensuring consistent execution across development, testing, and production servers.";
+  }
+
+  // Rameshwor Profile / Bio / About
+  if (q.includes('who is rameshwor') || q.includes('about rameshwor') || q.includes('about him') || q.includes('rameshwor kaun') || q.includes('tell me about rameshwor') || q.includes('introduce rameshwor') || q.includes('who is he')) {
+    return "Rameshwor Chaudhary is an AI/ML Engineer and Full-Stack Developer currently pursuing his B.E. in Computer Science (AI & ML) at Chandigarh University. He builds production-grade machine learning models, RAG pipelines, and interactive web systems.";
+  }
+
+  // Projects / Work / Portfolio creations
+  if (/\b(project|projects|work|creations|built|banaya|banaye)\b/i.test(q) || q.includes('what has he built') || q.includes('what have you built') || q.includes('what did you build')) {
+    if (q.includes('exam mind') || q.includes('exam')) {
+      return "Exam Mind AI is Rameshwor's adaptive exam preparation platform featuring interactive AI study assistants, question generation tools, and full authentication.";
+    }
+    if (q.includes('rag') || q.includes('doc intel') || q.includes('document')) {
+      return "Doc Intel RAG Chatbot is an intelligent document retrieval and QA system that extracts context from large PDFs and documents using vector embeddings and LLM reasoning.";
+    }
+    if (q.includes('resume') || q.includes('builder')) {
+      return "The AI Resume Builder is a smart tool developed by Rameshwor that creates ATS-optimized professional resumes with intelligent content suggestions.";
+    }
+    if (q.includes('voice') || q.includes('assistant') || q.includes('ishwor')) {
+      return "Ishwor AI Voice Assistant is this interactive multi-lingual assistant featuring real-time speech recognition, natural TTS synthesis, and high-speed multi-provider AI fallback.";
+    }
+    return "Rameshwor has built several standout projects including Exam Mind AI (study platform), Doc Intel RAG Chatbot, AI Resume Builder, and this 3D Digital Lab Portfolio. Check out the Projects section for live demos and code!";
+  }
+
+  // Skills & Tech Stack
+  if (/\b(skill|skills|stack|technologies|languages|tech|tools)\b/i.test(q) || q.includes('tech stack') || q.includes('kya kya aata')) {
+    return "Rameshwor is proficient in Python, C++, JavaScript, TypeScript, PyTorch, TensorFlow, OpenCV, FastAPI, React, Node.js, Express, Three.js, Docker, and GCP for AI/ML and full-stack development.";
   }
 
   // Business Analysis query
   if (q.includes('business analysis') || q.includes('ba kya hai') || q.includes('business analyst')) {
-    return "Business Analysis ek practice hai jisme business data, requirements aur processes ko analyze karke solutions design kiye jaate hain taaki business growth aur efficiency increase ho sake.";
+    return "Business Analysis is the practice of identifying business needs, analyzing data and processes, and determining solutions to deliver value and drive strategic organizational growth.";
   }
 
-  // Rameshwor Profile / Bio
-  if (q.includes('who is rameshwor') || q.includes('about rameshwor') || q.includes('about him') || q.includes('rameshwor kaun') || q.includes('tell me about')) {
-    return "Rameshwor Chaudhary ek energetic AI/ML Engineer aur Full-Stack Developer hain jo Chandigarh University se B.E. in AI/ML kar rahe hain. Unka focus cutting-edge LLMs, RAG pipelines aur interactive WebGL applications build karne par hai.";
+  // Education / College / University
+  if (/\b(education|college|university|chandigarh|cu|degree|study|studying|padhai|campus)\b/i.test(q)) {
+    return "Rameshwor is studying at Chandigarh University (CU), Punjab, India, pursuing a Bachelor of Engineering in Computer Science with a specialization in Artificial Intelligence & Machine Learning.";
   }
 
-  // Skills & Tech Stack
-  if (/\b(skill|skills|stack|technologies|languages|tech)\b/i.test(q) || q.includes('tech stack') || q.includes('kya kya aata')) {
-    return "Rameshwor Python, C++, JavaScript, TypeScript, PyTorch, TensorFlow, OpenCV, RAG, LLMs, FastAPI, React, Node.js, Three.js aur Docker mein proficient hain.";
+  // Contact / Hire / Opportunities
+  if (/\b(contact|email|reach|phone|hire|job|hiring|internship|connect|linkedin|github)\b/i.test(q)) {
+    return "You can reach Rameshwor via email at chaudharyishwor143@gmail.com, or connect on LinkedIn (in/chaudhari-ishwor) and GitHub (rameshworchaudhary). He is open to AI/ML engineering roles and research collaborations!";
   }
 
-  // Specific Technologies
-  if (/\b(python)\b/i.test(q)) {
-    return "Python Rameshwor ki core language hai, jisme unhone AI model training, PyTorch pipelines, computer vision aur backend APIs develop kiye hain.";
-  }
-  if (/\b(rag|retrieval)\b/i.test(q) || q.includes('retrieval augmented')) {
-    return "RAG (Retrieval-Augmented Generation) LLMs ko external documents aur vector databases se live factual data provide karta hai. Rameshwor ne Doc Intel RAG Chatbot build kiya hai!";
-  }
-  if (/\b(ai|artificial intelligence|generative ai)\b/i.test(q)) {
-    return "Artificial Intelligence machines ko insani intelligence jaisi problem-solving aur learning abilities deta hai. Rameshwor deep learning aur generative AI tools develop karte hain.";
-  }
-  if (/\b(ml|machine learning)\b/i.test(q)) {
-    return "Machine Learning data se pattern seekh kar predictions banata hai. Rameshwor PyTorch aur Scikit-Learn use karke ML models build karte hain.";
-  }
-  if (/\b(three\.?js|webgl|3d)\b/i.test(q)) {
-    return "Rameshwor Three.js aur WebGL shaders ka use karke 3D digital labs aur interactive particle animations design karte hain, jaise is portfolio ka background canvas!";
-  }
-
-  // Projects / Work / Creations
-  if (/\b(project|projects|work|creations|build|built|banaya|banaye)\b/i.test(q)) {
-    return "Rameshwor ke top projects mein Exam Mind AI (adaptive study platform), Doc Intel RAG Chatbot, AI Resume Builder aur ye 3D Digital Lab shamil hain. Details ke liye Projects section dekhein!";
-  }
-
-  // Education / College
-  if (/\b(education|college|university|chandigarh|cu|degree|study|studying|padhai)\b/i.test(q)) {
-    return "Rameshwor Chandigarh University (Punjab, India) se B.E. Computer Science Engineering kar rahe hain with specialization in Artificial Intelligence & Machine Learning.";
-  }
-
-  // Contact / Hire
-  if (/\b(contact|email|reach|phone|hire|job|hiring|internship|connect)\b/i.test(q)) {
-    return "Aap unhe directly email kar sakte hain chaudharyishwor143@gmail.com par, ya LinkedIn aur GitHub par message bhej sakte hain. He is open for exciting opportunities!";
-  }
-
-  // Research / Achievements
-  if (/\b(research|paper|hackathon|hackathons|achievement|achievements|award|awards)\b/i.test(q)) {
-    return "Rameshwor NLP optimization aur Computer Vision research par work kar rahe hain, aur unhone multiple AI/ML hackathons mein participate kiya hai.";
-  }
-
-  // Fun / Jokes
-  if (/\b(joke|jokes|funny|chutkula|hasao)\b/i.test(q)) {
-    return "Ek developer ne doctor se kaha: 'Doctor sahab, meri aankhein dukh rahi hain jab main code run karta hoon.' Doctor ne kaha: 'Toh code run mat karo, bug free likho!'";
-  }
-
-  // Casual / slang reaction
-  if (q.includes('chutiye') || q.includes('bhai') || q.includes('arre') || q.includes('kya bol raha')) {
-    return "Arre bhai shant ho jao! Main Ishwor hoon, aapka AI assistant. Poocho kya madad chahiye coding, tech ya Rameshwor ke projects ke baare mein?";
-  }
-
-  // Neural Networks / Deep Learning
-  if (/\b(neural|deep learning|cnn|rnn|transformer|llm|llms)\b/i.test(q)) {
-    return "Neural networks brain ke biological neurons se inspired computational models hote hain. Rameshwor Transformer architectures aur PyTorch use karke custom models train karte hain!";
+  // Research / Achievements / Hackathons
+  if (/\b(research|paper|hackathon|hackathons|achievement|achievements|award|awards|publication)\b/i.test(q)) {
+    return "Rameshwor actively conducts research in NLP optimization and computer vision pipelines, and has participated in multiple competitive AI/ML hackathons building real-world software solutions.";
   }
 
   // Math basic calculation
-  const mathMatch = q.match(/(\d+)\s*([\+\-\*\/])\s*(\d+)/);
+  const mathMatch = q.match(/(\d+(?:\.\d+)?)\s*([\+\-\*\/])\s*(\d+(?:\.\d+)?)/);
   if (mathMatch) {
     const a = parseFloat(mathMatch[1]);
     const op = mathMatch[2];
@@ -125,7 +138,18 @@ function getOfflineResponse(userMsg) {
     return `${a} ${op} ${b} = ${res} hota hai!`;
   }
 
-  return "Main aapki baat samajh gaya! Aap mujhse Rameshwor ke projects, AI/ML skills, education ya kisi bhi computer science topic ke baare mein pooch sakte hain.";
+  // Fun / Jokes
+  if (/\b(joke|jokes|funny|chutkula|hasao)\b/i.test(q)) {
+    return "Why do AI models love coffee? Because it helps them reduce their loss and avoid overfitting! 😄";
+  }
+
+  // Casual / slang reaction
+  if (q.includes('bhai') || q.includes('arre') || q.includes('kya bol raha') || q.includes('shant')) {
+    return "Arre bhai! Main Ishwor hoon, Rameshwor ka AI voice assistant. Poocho kya jaanna hai coding, AI/ML models ya portfolio projects ke baare mein?";
+  }
+
+  // General fallback tailored with portfolio context
+  return `That's an interesting question about "${userMsg}". Rameshwor specializes in AI/ML systems, Computer Vision, RAG architectures, and Full-Stack Engineering. Feel free to ask about his projects, skills, education at Chandigarh University, or get in touch for collaboration!`;
 }
 
 function buildMessages(message, history = []) {
@@ -155,7 +179,54 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
 }
 
 /**
- * Primary Provider: NVIDIA Nemotron 3 Ultra (with 503/429 exponential backoff retries)
+ * 1. PRIMARY: Groq (openai/gpt-oss-120b)
+ */
+async function tryGroqPrimary(trimmedMsg, history) {
+  const groqKey = (process.env.GROQ_API_KEY || '').trim();
+  if (!groqKey || groqKey.includes('your_groq_api_key')) {
+    return null;
+  }
+
+  console.log('[AI] Trying Groq GPT-OSS 120B');
+
+  const endpoint = 'https://api.groq.com/openai/v1/chat/completions';
+  const model = (process.env.GROQ_MODEL || '').trim() || 'openai/gpt-oss-120b';
+
+  try {
+    const response = await fetchWithTimeout(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${groqKey}`
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: buildMessages(trimmedMsg, history),
+        temperature: 0.7,
+        max_tokens: 350
+      })
+    }, 10000);
+
+    if (response && response.ok) {
+      const data = await response.json();
+      const reply = data?.choices?.[0]?.message?.content;
+      if (reply && reply.trim()) {
+        console.log('[AI] Groq succeeded');
+        return reply.trim().replace(/\*\*/g, '').replace(/\*/g, '');
+      }
+    } else {
+      const errText = response ? await response.text().catch(() => '') : '';
+      console.warn(`[Groq] API returned status ${response?.status}:`, errText);
+    }
+  } catch (err) {
+    console.warn('[Groq] Request error:', err.message);
+  }
+
+  return null;
+}
+
+/**
+ * 2. FALLBACK: NVIDIA Nemotron
  */
 async function tryNvidiaNemotron(trimmedMsg, history) {
   const nemotronKey = (process.env.NEMOTRON_API_KEY || process.env.NVIDIA_API_KEY || process.env.OPENROUTER_API_KEY || '').trim();
@@ -163,7 +234,6 @@ async function tryNvidiaNemotron(trimmedMsg, history) {
     return null;
   }
 
-  console.log('[NVIDIA Nemotron] Request started');
   const isOpenRouter = nemotronKey.startsWith('sk-or-');
 
   let rawEndpoint = (process.env.NEMOTRON_API_URL || '').trim();
@@ -190,8 +260,8 @@ async function tryNvidiaNemotron(trimmedMsg, history) {
     headers['X-Title'] = 'Rameshwor Chaudhary Portfolio';
   }
 
-  const maxRetries = 3;
-  const retryDelays = [1000, 2000, 4000];
+  const maxRetries = 2;
+  const retryDelays = [800, 1600];
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -202,7 +272,7 @@ async function tryNvidiaNemotron(trimmedMsg, history) {
           model: model,
           messages: buildMessages(trimmedMsg, history),
           temperature: 0.7,
-          max_tokens: 300
+          max_tokens: 350
         })
       }, 10000);
 
@@ -210,7 +280,7 @@ async function tryNvidiaNemotron(trimmedMsg, history) {
         const data = await response.json();
         const reply = data?.choices?.[0]?.message?.content;
         if (reply && reply.trim()) {
-          console.log('[NVIDIA Nemotron] Request successful');
+          console.log('[AI] NVIDIA succeeded');
           return reply.trim().replace(/\*\*/g, '').replace(/\*/g, '');
         }
       } else if (response && (response.status === 503 || response.status === 429)) {
@@ -218,12 +288,12 @@ async function tryNvidiaNemotron(trimmedMsg, history) {
         const statusText = status === 503 ? '503 Service Temporarily Overloaded' : '429 Rate Limit Exceeded';
 
         if (attempt < maxRetries) {
-          const waitTime = retryDelays[attempt] || 1000 * Math.pow(2, attempt);
-          console.log(`[NVIDIA Nemotron] ${status} received (${statusText}), retrying attempt ${attempt + 1}/${maxRetries} in ${waitTime}ms...`);
+          const waitTime = retryDelays[attempt] || 1000;
+          console.log(`[NVIDIA Nemotron] ${status} (${statusText}), retrying attempt ${attempt + 1}/${maxRetries} in ${waitTime}ms...`);
           await delay(waitTime);
           continue;
         } else {
-          console.warn(`[NVIDIA Nemotron] ${status} received, all ${maxRetries} retries exhausted.`);
+          console.warn(`[NVIDIA Nemotron] ${status} received, retries exhausted.`);
           break;
         }
       } else {
@@ -243,61 +313,12 @@ async function tryNvidiaNemotron(trimmedMsg, history) {
     }
   }
 
-  console.log('[NVIDIA Nemotron] Request failed');
-  return null;
-}
-
-/**
- * Secondary Fallback Provider: Groq (llama-3.3-70b-versatile or llama-3.1-8b-instant)
- */
-async function tryGroqFallback(trimmedMsg, history) {
-  const groqKey = (process.env.GROQ_API_KEY || '').trim();
-  if (!groqKey || groqKey.includes('your_groq_api_key')) {
-    return null;
-  }
-
-  console.log('[NVIDIA Nemotron] Trying Groq fallback...');
-  console.log('[Groq] Fallback request started');
-
-  const endpoint = 'https://api.groq.com/openai/v1/chat/completions';
-  const model = (process.env.GROQ_MODEL || '').trim() || 'llama-3.3-70b-versatile';
-
-  try {
-    const response = await fetchWithTimeout(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${groqKey}`
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: buildMessages(trimmedMsg, history),
-        temperature: 0.7,
-        max_tokens: 300
-      })
-    }, 10000);
-
-    if (response && response.ok) {
-      const data = await response.json();
-      const reply = data?.choices?.[0]?.message?.content;
-      if (reply && reply.trim()) {
-        console.log('[Groq] Fallback request successful');
-        return reply.trim().replace(/\*\*/g, '').replace(/\*/g, '');
-      }
-    } else {
-      const errText = response ? await response.text().catch(() => '') : '';
-      console.warn(`[Groq] API returned status ${response?.status}:`, errText);
-    }
-  } catch (err) {
-    console.warn('[Groq] Fallback request error:', err.message);
-  }
-
   return null;
 }
 
 /**
  * Orchestrator:
- * User Request -> NVIDIA Nemotron (Primary) -> If fails -> Groq (Fallback) -> If fails -> Clean Safe Response
+ * User Request -> Groq GPT-OSS 120B (Primary) -> If fails -> NVIDIA Nemotron (Fallback) -> If fails -> Offline Contextual Fallback
  */
 export async function getChatReply(message, history = []) {
   const trimmedMsg = (message || '').trim();
@@ -305,19 +326,20 @@ export async function getChatReply(message, history = []) {
     return "Namaste! Main Rameshwor ka AI voice assistant hoon. Aap mujhse koi bhi sawal pooch sakte hain!";
   }
 
-  // 1. PRIMARY: Try NVIDIA Nemotron 3 Ultra
+  // 1. PRIMARY: Groq (openai/gpt-oss-120b)
+  const groqReply = await tryGroqPrimary(trimmedMsg, history);
+  if (groqReply) {
+    return groqReply;
+  }
+
+  // 2. FALLBACK: NVIDIA Nemotron
+  console.log('[AI] Groq failed, trying NVIDIA Nemotron');
   const nvidiaReply = await tryNvidiaNemotron(trimmedMsg, history);
   if (nvidiaReply) {
     return nvidiaReply;
   }
 
-  // 2. SECONDARY: Try Groq Fallback
-  const groqReply = await tryGroqFallback(trimmedMsg, history);
-  if (groqReply) {
-    return groqReply;
-  }
-
-  // 3. Clean Error / Offline Fallback if both remote providers are unreachable
-  console.log('[AI] NVIDIA and Groq both failed (or not configured). Using local engine.');
+  // 3. FINAL FALLBACK: Local contextual knowledge engine
+  console.log('[AI] Both providers failed');
   return getOfflineResponse(trimmedMsg);
 }
