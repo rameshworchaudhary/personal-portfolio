@@ -40,7 +40,7 @@ function getOfflineResponse(userMsg) {
 
   // Model / identity query
   if (q.includes('kaun sa model') || q.includes('which model') || q.includes('what model') || q.includes('who made you') || q.includes('model used') || q.includes('architecture')) {
-    return "Main Ishwor AI voice assistant hoon, primary powered by Groq GPT-OSS 120B with NVIDIA Nemotron fallback, specially customized for Rameshwor Chaudhary's portfolio!";
+    return "Main Ishwor AI voice assistant hoon, primary powered by Groq and NVIDIA Nemotron models with a built-in contextual engine, specially customized for Rameshwor Chaudhary's portfolio!";
   }
 
   // Identity / Assistant Info
@@ -179,7 +179,7 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
 }
 
 /**
- * 1. PRIMARY: Groq (openai/gpt-oss-120b)
+ * 1. PRIMARY: Groq
  */
 async function tryGroqPrimary(trimmedMsg, history) {
   const groqKey = (process.env.GROQ_API_KEY || '').trim();
@@ -187,39 +187,40 @@ async function tryGroqPrimary(trimmedMsg, history) {
     return null;
   }
 
-  console.log('[AI] Trying Groq GPT-OSS 120B');
-
   const endpoint = 'https://api.groq.com/openai/v1/chat/completions';
-  const model = (process.env.GROQ_MODEL || '').trim() || 'openai/gpt-oss-120b';
+  const modelsToTry = [
+    (process.env.GROQ_MODEL || '').trim(),
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant',
+    'mixtral-8x7b-32768'
+  ].filter(Boolean);
 
-  try {
-    const response = await fetchWithTimeout(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${groqKey}`
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: buildMessages(trimmedMsg, history),
-        temperature: 0.7,
-        max_tokens: 350
-      })
-    }, 10000);
+  for (const model of modelsToTry) {
+    try {
+      const response = await fetchWithTimeout(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${groqKey}`
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: buildMessages(trimmedMsg, history),
+          temperature: 0.7,
+          max_tokens: 350
+        })
+      }, 8000);
 
-    if (response && response.ok) {
-      const data = await response.json();
-      const reply = data?.choices?.[0]?.message?.content;
-      if (reply && reply.trim()) {
-        console.log('[AI] Groq succeeded');
-        return reply.trim().replace(/\*\*/g, '').replace(/\*/g, '');
+      if (response && response.ok) {
+        const data = await response.json();
+        const reply = data?.choices?.[0]?.message?.content;
+        if (reply && reply.trim()) {
+          return reply.trim().replace(/\*\*/g, '').replace(/\*/g, '');
+        }
       }
-    } else {
-      const errText = response ? await response.text().catch(() => '') : '';
-      console.warn(`[Groq] API returned status ${response?.status}:`, errText);
+    } catch (err) {
+      // Continue to next fallback model
     }
-  } catch (err) {
-    console.warn('[Groq] Request error:', err.message);
   }
 
   return null;
@@ -246,9 +247,11 @@ async function tryNvidiaNemotron(trimmedMsg, history) {
     endpoint = endpoint.replace(/\/+$/, '') + '/chat/completions';
   }
 
-  const model = (process.env.NEMOTRON_MODEL || '').trim() || (isOpenRouter
-    ? 'nvidia/nemotron-3-ultra'
-    : 'nvidia/nemotron-3-ultra');
+  const modelsToTry = [
+    (process.env.NEMOTRON_MODEL || '').trim(),
+    isOpenRouter ? 'nvidia/nemotron-4-340b-instruct' : 'nvidia/llama-3.1-nemotron-70b-instruct',
+    'meta/llama-3.3-70b-instruct'
+  ].filter(Boolean);
 
   const headers = {
     'Content-Type': 'application/json',
@@ -260,55 +263,41 @@ async function tryNvidiaNemotron(trimmedMsg, history) {
     headers['X-Title'] = 'Rameshwor Chaudhary Portfolio';
   }
 
-  const maxRetries = 2;
-  const retryDelays = [800, 1600];
+  const maxRetries = 1;
+  const retryDelays = [800];
 
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await fetchWithTimeout(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          model: model,
-          messages: buildMessages(trimmedMsg, history),
-          temperature: 0.7,
-          max_tokens: 350
-        })
-      }, 10000);
+  for (const model of modelsToTry) {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetchWithTimeout(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            model: model,
+            messages: buildMessages(trimmedMsg, history),
+            temperature: 0.7,
+            max_tokens: 350
+          })
+        }, 8000);
 
-      if (response && response.ok) {
-        const data = await response.json();
-        const reply = data?.choices?.[0]?.message?.content;
-        if (reply && reply.trim()) {
-          console.log('[AI] NVIDIA succeeded');
-          return reply.trim().replace(/\*\*/g, '').replace(/\*/g, '');
+        if (response && response.ok) {
+          const data = await response.json();
+          const reply = data?.choices?.[0]?.message?.content;
+          if (reply && reply.trim()) {
+            return reply.trim().replace(/\*\*/g, '').replace(/\*/g, '');
+          }
+        } else if (response && (response.status === 503 || response.status === 429)) {
+          if (attempt < maxRetries) {
+            await delay(retryDelays[attempt] || 800);
+            continue;
+          }
         }
-      } else if (response && (response.status === 503 || response.status === 429)) {
-        const status = response.status;
-        const statusText = status === 503 ? '503 Service Temporarily Overloaded' : '429 Rate Limit Exceeded';
-
-        if (attempt < maxRetries) {
-          const waitTime = retryDelays[attempt] || 1000;
-          console.log(`[NVIDIA Nemotron] ${status} (${statusText}), retrying attempt ${attempt + 1}/${maxRetries} in ${waitTime}ms...`);
-          await delay(waitTime);
+      } catch (err) {
+        if (err.name === 'AbortError' && attempt < maxRetries) {
+          await delay(retryDelays[attempt] || 800);
           continue;
-        } else {
-          console.warn(`[NVIDIA Nemotron] ${status} received, retries exhausted.`);
-          break;
         }
-      } else {
-        const errText = response ? await response.text().catch(() => '') : '';
-        console.warn(`[NVIDIA Nemotron] API returned status ${response?.status}:`, errText);
-        break;
       }
-    } catch (err) {
-      if (err.name === 'AbortError' && attempt < maxRetries) {
-        const waitTime = retryDelays[attempt] || 1000;
-        console.log(`[NVIDIA Nemotron] Request timeout/abort, retrying attempt ${attempt + 1}/${maxRetries} in ${waitTime}ms...`);
-        await delay(waitTime);
-        continue;
-      }
-      console.warn('[NVIDIA Nemotron] Request error:', err.message);
       break;
     }
   }
@@ -318,7 +307,7 @@ async function tryNvidiaNemotron(trimmedMsg, history) {
 
 /**
  * Orchestrator:
- * User Request -> Groq GPT-OSS 120B (Primary) -> If fails -> NVIDIA Nemotron (Fallback) -> If fails -> Offline Contextual Fallback
+ * User Request -> Groq (Primary if key set) -> NVIDIA Nemotron (Fallback if key set) -> Offline Contextual Engine
  */
 export async function getChatReply(message, history = []) {
   const trimmedMsg = (message || '').trim();
@@ -326,20 +315,24 @@ export async function getChatReply(message, history = []) {
     return "Namaste! Main Rameshwor ka AI voice assistant hoon. Aap mujhse koi bhi sawal pooch sakte hain!";
   }
 
-  // 1. PRIMARY: Groq (openai/gpt-oss-120b)
-  const groqReply = await tryGroqPrimary(trimmedMsg, history);
-  if (groqReply) {
-    return groqReply;
+  // 1. PRIMARY: Groq (if key available)
+  const groqKey = (process.env.GROQ_API_KEY || '').trim();
+  if (groqKey && !groqKey.includes('your_groq_api_key')) {
+    const groqReply = await tryGroqPrimary(trimmedMsg, history);
+    if (groqReply) {
+      return groqReply;
+    }
   }
 
-  // 2. FALLBACK: NVIDIA Nemotron
-  console.log('[AI] Groq failed, trying NVIDIA Nemotron');
-  const nvidiaReply = await tryNvidiaNemotron(trimmedMsg, history);
-  if (nvidiaReply) {
-    return nvidiaReply;
+  // 2. FALLBACK: NVIDIA Nemotron (if key available)
+  const nemotronKey = (process.env.NEMOTRON_API_KEY || process.env.NVIDIA_API_KEY || process.env.OPENROUTER_API_KEY || '').trim();
+  if (nemotronKey && !nemotronKey.includes('your_nemotron_api_key') && !nemotronKey.includes('your_nvidia_api_key')) {
+    const nvidiaReply = await tryNvidiaNemotron(trimmedMsg, history);
+    if (nvidiaReply) {
+      return nvidiaReply;
+    }
   }
 
-  // 3. FINAL FALLBACK: Local contextual knowledge engine
-  console.log('[AI] Both providers failed');
+  // 3. CONTEXTUAL KNOWLEDGE ENGINE: Fast, accurate portfolio responses
   return getOfflineResponse(trimmedMsg);
 }

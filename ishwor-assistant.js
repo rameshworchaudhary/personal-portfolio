@@ -12,8 +12,30 @@
   let recognition = null;
   let greetingPlayed = false;
   let autoGreetingShown = false;
+  let cachedVoices = [];
 
   const GREETING_TEXT = "Hey! 👋 Welcome to Rameshwor Chaudhary's portfolio. I'm Rameshwor Chaudhary — AI & ML Developer.";
+
+  // Pre-load and cache browser voices asynchronously
+  function loadAvailableVoices() {
+    if (!('speechSynthesis' in window)) return [];
+    try {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length > 0) {
+        cachedVoices = voices;
+      }
+    } catch (e) {
+      console.warn('Voice enumeration warning:', e);
+    }
+    return cachedVoices;
+  }
+
+  if ('speechSynthesis' in window) {
+    loadAvailableVoices();
+    window.speechSynthesis.onvoiceschanged = () => {
+      loadAvailableVoices();
+    };
+  }
 
   // Unlock Speech Synthesis Audio Engine on mobile touch/click
   function unlockAudio() {
@@ -244,26 +266,161 @@
     statusText.textContent = text || 'Idle';
   }
 
-  // Helper to get best voice
-  function getBestVoice() {
+  // Detect if text contains conversational Hinglish / Hindi keywords or Devanagari
+  function isHinglishText(text) {
+    if (!text) return false;
+    if (/[\u0900-\u097F]/.test(text)) return true;
+
+    const hinglishPattern = /\b(aap|aapka|aapke|aapki|aapko|aapne|main|mera|mere|meri|mujhe|mujhko|hum|humara|humare|humari|tum|tumhara|tumhare|tumhari|tujhe|tera|tere|teri|bhai|bhaiya|yaar|dost|kya|kyun|kyu|kaise|kaisa|kaisi|kahan|kidhar|kab|kaun|kitna|kitni|kitne|hai|hain|ho|hoon|hun|tha|thi|the|hoga|hogi|honge|karna|karo|karein|kare|karta|karti|karte|kiya|kiye|diya|dekh|dekho|sun|suno|batao|bataiye|boliye|bolo|jaanna|jaante|chahte|chaho|chahiye|sakta|sakti|sakte|raha|rahi|rahe|nahi|nahin|mat|sirf|bas|bhi|toh|acha|accha|achha|thik|theek|sahi|galat|badhiya|shandar|namaste|namaskar|pranam|dhanyawad|shukriya|alvida|kuch|kuchh|bahut|bohot|thoda|thodi|sab|sabse|baare|baat|sawal|jawab|madad|padhai|naukri|kaam|banaya|banaye|ispe|isme|usme|kiske|kisne|chal|chalo)\b/i;
+
+    return hinglishPattern.test(text);
+  }
+
+  // Deterministic Voice Selection Logic (Identical in Localhost & Production)
+  function getBestVoice(isHinglish) {
     if (!('speechSynthesis' in window)) return null;
-    const voices = window.speechSynthesis.getVoices();
+    const voices = cachedVoices.length > 0 ? cachedVoices : loadAvailableVoices();
     if (!voices || voices.length === 0) return null;
 
-    // Prioritize natural Indian English / Hindi voices (e.g., en-IN, hi-IN, Google हिन्दी, Rishi, Neerja, Prabhat, etc.)
-    return voices.find(v => 
-      (v.lang === 'en-IN' || v.lang === 'hi-IN' || v.lang.startsWith('en_IN') || v.lang.startsWith('hi_IN')) &&
-      (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Rishi') || v.name.includes('Neerja') || v.name.includes('Prabhat'))
-    ) || voices.find(v => 
-      v.lang === 'en-IN' || v.lang === 'hi-IN' || v.lang.startsWith('en_IN') || v.lang.startsWith('hi_IN')
-    ) || voices.find(v => 
-      (v.lang.startsWith('en') || v.lang.startsWith('hi')) && 
-      (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Rishi') || v.name.includes('Samantha'))
-    ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+    if (isHinglish) {
+      // 1. Preferred Natural/Neural Indian English voices by exact priority name
+      const preferredIndianEnNames = [
+        'microsoft neerja online (natural) - english (india)',
+        'microsoft neerja',
+        'microsoft prabhat online (natural) - english (india)',
+        'microsoft prabhat',
+        'microsoft ravi online (natural) - english (india)',
+        'microsoft ravi',
+        'microsoft heera',
+        'google english (india)',
+        'google en-in',
+        'rishi',
+        'veena',
+        'isha'
+      ];
+
+      for (const key of preferredIndianEnNames) {
+        const match = voices.find(v => {
+          const name = (v.name || '').toLowerCase();
+          const lang = (v.lang || '').toLowerCase();
+          return (lang.includes('en-in') || lang.includes('en_in') || name.includes('india')) && name.includes(key);
+        });
+        if (match) return match;
+      }
+
+      // 2. Any Indian English voice with natural / neural / google designation
+      const naturalIndianEn = voices.find(v => {
+        const name = (v.name || '').toLowerCase();
+        const lang = (v.lang || '').toLowerCase();
+        const isIndianEn = lang === 'en-in' || lang.startsWith('en_in') || name.includes('english (india)') || name.includes('en-in');
+        return isIndianEn && (name.includes('natural') || name.includes('google') || name.includes('neural'));
+      });
+      if (naturalIndianEn) return naturalIndianEn;
+
+      // 3. Any available en-IN / en_IN voice
+      const anyIndianEn = voices.find(v => {
+        const name = (v.name || '').toLowerCase();
+        const lang = (v.lang || '').toLowerCase();
+        return lang === 'en-in' || lang.startsWith('en_in') || lang.startsWith('en-in') || name.includes('english (india)') || name.includes('en-in');
+      });
+      if (anyIndianEn) return anyIndianEn;
+
+      // 4. Natural / Neural Hindi (hi-IN) voices
+      const preferredHindiNames = [
+        'microsoft swara online (natural) - hindi (india)',
+        'microsoft swara',
+        'microsoft madhur online (natural) - hindi (india)',
+        'microsoft madhur',
+        'google हिन्दी',
+        'google hi-in',
+        'lekha',
+        'neel'
+      ];
+      for (const key of preferredHindiNames) {
+        const match = voices.find(v => {
+          const name = (v.name || '').toLowerCase();
+          const lang = (v.lang || '').toLowerCase();
+          return (lang.includes('hi-in') || lang.includes('hi_in') || name.includes('hindi') || name.includes('हिन्दी')) && name.includes(key);
+        });
+        if (match) return match;
+      }
+
+      // 5. Any hi-IN / Hindi voice
+      const anyHindi = voices.find(v => {
+        const name = (v.name || '').toLowerCase();
+        const lang = (v.lang || '').toLowerCase();
+        return lang === 'hi-in' || lang.startsWith('hi_in') || lang.startsWith('hi-in') || name.includes('hindi') || name.includes('हिन्दी');
+      });
+      if (anyHindi) return anyHindi;
+
+      // 6. Deterministic High-Quality English fallback
+      const preferredFallbackEnNames = [
+        'microsoft jenny online (natural)',
+        'microsoft aria online (natural)',
+        'microsoft guy online (natural)',
+        'google us english',
+        'google uk english',
+        'samantha',
+        'daniel',
+        'karen',
+        'serena'
+      ];
+      for (const key of preferredFallbackEnNames) {
+        const match = voices.find(v => (v.name || '').toLowerCase().includes(key));
+        if (match) return match;
+      }
+
+      // 7. Deterministic English voice sorted alphabetically
+      const enVoices = voices
+        .filter(v => (v.lang || '').toLowerCase().startsWith('en'))
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      if (enVoices.length > 0) return enVoices[0];
+
+      // 8. Deterministic fallback sorted alphabetically
+      const sorted = [...voices].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      return sorted[0] || null;
+
+    } else {
+      // Pure English Mode - Deterministic Priority
+      const preferredEnglishNames = [
+        'microsoft neerja online (natural) - english (india)',
+        'microsoft prabhat online (natural) - english (india)',
+        'microsoft jenny online (natural)',
+        'microsoft aria online (natural)',
+        'microsoft guy online (natural)',
+        'google english (india)',
+        'google us english',
+        'rishi',
+        'samantha',
+        'daniel'
+      ];
+
+      for (const key of preferredEnglishNames) {
+        const match = voices.find(v => (v.name || '').toLowerCase().includes(key));
+        if (match) return match;
+      }
+
+      // Any Natural English voice
+      const anyNaturalEn = voices.find(v => {
+        const lang = (v.lang || '').toLowerCase();
+        const name = (v.name || '').toLowerCase();
+        return lang.startsWith('en') && (name.includes('natural') || name.includes('google') || name.includes('neural'));
+      });
+      if (anyNaturalEn) return anyNaturalEn;
+
+      // Any English voice sorted deterministically
+      const enVoices = voices
+        .filter(v => (v.lang || '').toLowerCase().startsWith('en'))
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      if (enVoices.length > 0) return enVoices[0];
+
+      const sorted = [...voices].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      return sorted[0] || null;
+    }
   }
 
   // Clean and prepare text for SpeechSynthesis with phonetic corrections
-  function prepareSpeechText(text) {
+  function prepareSpeechText(text, isHinglish) {
     if (!text) return '';
     let speech = text
       .replace(/[\*\_\`\#]/g, '')
@@ -275,8 +432,10 @@
       .replace(/\bAI&ML\b/gi, 'AI and Machine Learning')
       .replace(/\bML\b/g, 'Machine Learning')
       .replace(/\bml\b/g, 'Machine Learning')
-      // Fix AI abbreviation
+      // Fix AI and API abbreviations
       .replace(/\bAI\b/g, 'A.I.')
+      .replace(/\bAPI\b/g, 'A.P.I.')
+      .replace(/\bAPIs\b/g, 'A.P.I.s')
       // Fix C++
       .replace(/C\+\+/g, 'C plus plus')
       // Fix B.E. / CU
@@ -289,6 +448,9 @@
       .replace(/\bLLM\b/g, 'L L M')
       .replace(/\bNLP\b/g, 'N L P')
       .replace(/\b3D\b/gi, '3-D')
+      // Remove hyphenated/spaced phonetic splits on common words if present
+      .replace(/\bjaan-na\b/gi, 'jaanna')
+      .replace(/\bchaah-te\b/gi, 'chahte')
       // Remove extra whitespace
       .replace(/\s+/g, ' ')
       .trim();
@@ -312,7 +474,8 @@
     isSpeaking = true;
     setStatus('speaking', 'Speaking...');
 
-    const speechText = prepareSpeechText(text);
+    const isHinglish = isHinglishText(text);
+    const speechText = prepareSpeechText(text, isHinglish);
     if (!speechText) {
       isSpeaking = false;
       setStatus('', 'Idle');
@@ -321,11 +484,16 @@
 
     const utterance = new SpeechSynthesisUtterance(speechText);
 
-    utterance.rate = 1.0;
+    utterance.rate = isHinglish ? 0.98 : 1.0;
     utterance.pitch = 1.0;
 
-    const voice = getBestVoice();
-    if (voice) utterance.voice = voice;
+    const voice = getBestVoice(isHinglish);
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang || (isHinglish ? 'en-IN' : 'en-US');
+    } else {
+      utterance.lang = isHinglish ? 'en-IN' : 'en-US';
+    }
 
     utterance.onend = () => {
       isSpeaking = false;
@@ -371,7 +539,7 @@
     recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    recognition.lang = 'en-IN';
 
     recognition.onstart = () => {
       isListening = true;
@@ -544,11 +712,17 @@
   function triggerGreetingUtterance(force) {
     if (isMuted) return;
 
-    const utterance = new SpeechSynthesisUtterance(prepareSpeechText(GREETING_TEXT));
+    const utterance = new SpeechSynthesisUtterance(prepareSpeechText(GREETING_TEXT, false));
     utterance.rate = 1.0;
+    utterance.pitch = 1.0;
 
-    const voice = getBestVoice();
-    if (voice) utterance.voice = voice;
+    const voice = getBestVoice(false);
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang || 'en-IN';
+    } else {
+      utterance.lang = 'en-IN';
+    }
 
     let greetingStarted = false;
     const toast = document.getElementById('ishwor-voice-toast');
