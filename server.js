@@ -21,18 +21,33 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(express.static(__dirname));
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, history = [] } = req.body;
-    if (!message || typeof message !== 'string') {
+    const { message, query, history = [] } = req.body || {};
+    const userMsg = message || query;
+    if (!userMsg || typeof userMsg !== 'string') {
       return res.status(400).json({ error: 'Valid message string is required.' });
     }
 
-    const reply = await getChatReply(message, history);
-    return res.json({ reply });
+    const reply = await getChatReply(userMsg, Array.isArray(history) ? history : []);
+    return res.json({
+      reply,
+      response: reply,
+      message: reply
+    });
   } catch (err) {
     console.error('Chat API Error:', err);
     return res.status(500).json({ error: 'Server error processing chat request.' });

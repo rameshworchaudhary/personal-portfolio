@@ -153,7 +153,15 @@ function getOfflineResponse(userMsg) {
 }
 
 function buildMessages(message, history = []) {
-  const formattedHistory = (history || []).slice(-6).map(item => ({
+  let historyList = Array.isArray(history) ? history.slice(-6) : [];
+  if (historyList.length > 0) {
+    const lastItem = historyList[historyList.length - 1];
+    if (lastItem && lastItem.role === 'user' && (lastItem.content === message || lastItem.text === message)) {
+      historyList = historyList.slice(0, -1);
+    }
+  }
+
+  const formattedHistory = historyList.map(item => ({
     role: item.role === 'user' ? 'user' : 'assistant',
     content: item.content || item.text || ''
   })).filter(item => item.content);

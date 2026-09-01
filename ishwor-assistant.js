@@ -550,7 +550,7 @@
 
     recognition.onresult = (event) => {
       let transcript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
       }
       document.getElementById('ishwor-input').value = transcript;
@@ -638,7 +638,7 @@
       }
 
       const data = await res.json();
-      const reply = data.reply || "I'm having trouble getting an answer right now. Please try again!";
+      const reply = (typeof data === 'string' ? data : (data?.reply || data?.response || data?.message || data?.text || data?.answer || '')) || "I'm having trouble getting an answer right now. Please try again!";
 
       appendMessage(reply, 'bot');
       conversationHistory.push({ role: 'assistant', content: reply });
