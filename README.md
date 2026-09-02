@@ -83,7 +83,7 @@ Example:
 GROQ_API_KEY=your_groq_api_key
 GROQ_MODEL=openai/gpt-oss-120b
 NEMOTRON_API_KEY=your_nemotron_api_key
-NEMOTRON_MODEL=nvidia/nemotron-3-ultra
+NEMOTRON_MODEL=nvidia/nemotron-3-super-120b-a12b
 PORT=3000
 ```
 

@@ -45,6 +45,17 @@
   }
   </script>
 
+  <!-- Import Map for modern Three.js ES Modules -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+      "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
   <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -83,6 +94,387 @@
       --container-width: 1260px;
     }
 
+    /* ── CINEMATIC 0-100 LOADING INTRO & 3D PHOTO DECK (REFERENCE 1) ── */
+    #cinematic-intro-stage {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background: radial-gradient(circle at center, #10141c 0%, #08090b 70%, #030406 100%);
+      z-index: 100000;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 32px 36px;
+      overflow: hidden;
+      perspective: 1200px;
+      transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.85s;
+    }
+
+    #cinematic-intro-stage.fade-out {
+      opacity: 0;
+      transform: scale(1.05);
+      pointer-events: none;
+    }
+
+    #intro-photo-cloud {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .intro-deck-card {
+      position: absolute;
+      width: 135px;
+      height: 175px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 1px rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: #11141b;
+      transform-origin: center center;
+      will-change: transform, opacity, filter;
+    }
+
+    .intro-deck-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .intro-deck-card .deck-card-num {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(0, 240, 118, 0.4);
+      color: var(--accent-green);
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .intro-header-bar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .intro-brand-tag {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    .intro-brand-tag .intro-status-beacon {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
+      animation: beaconPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes beaconPulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.4); opacity: 1; box-shadow: 0 0 16px var(--accent-green); }
+    }
+
+    .intro-skip-btn {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-gray);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 8px 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .intro-skip-btn:hover {
+      background: rgba(0, 240, 118, 0.12);
+      border-color: var(--accent-green);
+      color: #fff;
+    }
+
+    .intro-skip-btn span {
+      color: var(--accent-green);
+      font-size: 11px;
+    }
+
+    .intro-center-stage {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin: auto 0;
+      pointer-events: none;
+    }
+
+    .intro-counter-wrapper {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: clamp(72px, 12vw, 150px);
+      font-weight: 900;
+      line-height: 0.9;
+      letter-spacing: -2px;
+      color: #ffffff;
+      text-shadow: 0 0 40px rgba(0, 240, 118, 0.25), 0 10px 30px rgba(0,0,0,0.8);
+      user-select: none;
+    }
+
+    .intro-counter-wrapper .counter-symbol {
+      font-size: 0.45em;
+      font-weight: 700;
+      color: var(--accent-green);
+      margin-left: 6px;
+      font-family: var(--font-mono);
+    }
+
+    .intro-status-text {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-green);
+      letter-spacing: 4px;
+      margin-top: 18px;
+      text-transform: uppercase;
+      opacity: 0.9;
+      text-shadow: 0 0 14px var(--accent-green-glow);
+    }
+
+    .intro-progress-bar-container {
+      width: min(320px, 80vw);
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      margin-top: 22px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .intro-progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00a852, #00f076);
+      box-shadow: 0 0 12px var(--accent-green);
+      transition: width 0.08s linear;
+    }
+
+    /* Cinematic Title Reveal Sequence */
+    #intro-title-reveal {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.92);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #intro-title-reveal.reveal-active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .cinematic-title {
+      font-family: var(--font-display);
+      font-size: clamp(34px, 6vw, 76px);
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: -1px;
+      line-height: 1.05;
+      text-shadow: 0 0 35px rgba(0, 240, 118, 0.35), 0 12px 30px rgba(0,0,0,0.9);
+      margin-bottom: 8px;
+    }
+
+    .cinematic-subtitle {
+      font-family: var(--font-mono);
+      font-size: clamp(12px, 1.8vw, 16px);
+      color: var(--accent-green);
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .intro-footer-bar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* ── GLOBAL PERSISTENT 3D BACKGROUND LAYER (VISIBLE ACROSS ENTIRE PAGE) ── */
+    .hero-3d-bg-wrapper {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      background: #08090b url('/public/assets/intro/photo-02.webp') center center / cover no-repeat;
+    }
+
+    .hero-3d-canvas-container {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .hero-3d-canvas-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+      outline: none;
+    }
+
+    .hero-3d-ambient-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: 
+        /* Subtle edge vignette that lets the full screen 3D model shine */
+        radial-gradient(circle at 50% 50%, transparent 45%, rgba(8, 9, 11, 0.45) 85%, rgba(8, 9, 11, 0.75) 100%),
+        /* Gentle soft shade on far left for headline text contrast */
+        linear-gradient(90deg, rgba(8, 9, 11, 0.55) 0%, rgba(8, 9, 11, 0.25) 20%, transparent 45%, transparent 100%),
+        /* Top navbar shade and bottom transition */
+        linear-gradient(to bottom, rgba(8, 9, 11, 0.25) 0%, transparent 15%, transparent 85%, rgba(8, 9, 11, 0.75) 100%);
+    }
+
+    /* Dynamic Role Rotator */
+    .hero-role-rotator-wrapper {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .hero-role-animated-text {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 3.2vw, 44px);
+      font-weight: 800;
+      color: var(--accent-green);
+      text-shadow: 0 0 24px rgba(0, 240, 118, 0.4);
+      letter-spacing: -0.5px;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .hero-role-animated-text.slide-out {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+
+    .hero-role-animated-text.slide-in {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    /* Specs Box in Hero Right */
+    .hero-spec-card {
+      background: rgba(14, 17, 23, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 20px;
+      text-align: left;
+      width: 100%;
+      max-width: 320px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    }
+
+    .spec-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .spec-card-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-green);
+      letter-spacing: 1px;
+    }
+
+    .spec-card-body {
+      font-size: 13px;
+      color: var(--text-gray);
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+
+    .spec-badge-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .spec-badge-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--text-white);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .spec-badge-item span.icon {
+      color: var(--accent-green);
+    }
+
     *, *::before, *::after {
       margin: 0;
       padding: 0;
@@ -118,46 +510,6 @@
       max-width: var(--container-width);
       margin: 0 auto;
       padding: 0 24px;
-    }
-
-    /* ── FULLSCREEN BACKGROUND PHOTO LAYER (OPTIMIZED ZOOM & PROPORTIONS) ── */
-    .fullscreen-photo-container {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      height: 100dvh;
-      z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
-      background-color: var(--bg-dark);
-    }
-
-    .fullscreen-photo-img {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      height: 100%;
-      min-width: 100%;
-      min-height: 100%;
-      object-fit: cover;
-      object-position: center 16%;
-      filter: saturate(1.15) contrast(1.05) brightness(1.03);
-    }
-
-    .fullscreen-photo-overlay {
-      position: absolute;
-      inset: 0;
-      background: 
-        /* Radial softness focused on center face with smooth vignette to preserve natural photo colors */
-        radial-gradient(ellipse 65% 65% at 50% 32%, transparent 0%, rgba(8, 9, 11, 0.3) 48%, rgba(8, 9, 11, 0.92) 88%, rgba(8, 9, 11, 0.98) 100%),
-        /* Lateral gradients: dark on left for text readability, clear in center, gentle on right */
-        linear-gradient(90deg, rgba(8, 9, 11, 0.94) 0%, rgba(8, 9, 11, 0.42) 28%, rgba(8, 9, 11, 0.0) 50%, rgba(8, 9, 11, 0.38) 72%, rgba(8, 9, 11, 0.94) 100%),
-        /* Top navbar shade and bottom fade to sub-hero strip */
-        linear-gradient(to bottom, rgba(8, 9, 11, 0.65) 0%, transparent 12%, transparent 62%, rgba(8, 9, 11, 0.98) 100%);
-      pointer-events: none;
     }
 
     /* ── HEADER / NAVIGATION ── */
@@ -325,15 +677,37 @@
 
     .hero-grid {
       display: grid;
-      grid-template-columns: 1.22fr 0.9fr 0.88fr;
+      grid-template-columns: 1.3fr 0.9fr;
       align-items: center;
       justify-content: space-between;
-      gap: 28px;
+      gap: 48px;
       position: relative;
-      z-index: 2;
+      z-index: 3;
       width: 100%;
       margin: auto 0;
-      padding: 10px 0 16px;
+      padding: 16px 0 24px;
+    }
+
+    @media (max-width: 1024px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 36px;
+        text-align: center;
+      }
+      .hero-col-left {
+        align-items: center !important;
+        text-align: center !important;
+      }
+      .hero-buttons-row {
+        justify-content: center !important;
+      }
+      .hero-col-right {
+        align-items: center !important;
+        text-align: center !important;
+      }
+      .hero-spec-card {
+        max-width: 100% !important;
+      }
     }
 
     /* Left Column: Innovate Develop Succeed + Pitch & Action Buttons (Left Shoulder) */
@@ -349,38 +723,23 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-family: var(--font-display);
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
       margin-bottom: 12px;
-      text-transform: capitalize;
-    }
-
-    .hero-build-kicker .kicker-solid {
-      color: var(--text-white);
-    }
-
-    .hero-build-kicker .kicker-stroke {
-      color: transparent;
-      -webkit-text-stroke: 1.5px var(--accent-green);
-      text-shadow: 0 0 16px rgba(0, 240, 118, 0.35);
+      color: var(--accent-green);
+      text-transform: uppercase;
     }
 
     .hero-subheadline {
       font-family: var(--font-display);
-      font-size: clamp(32px, 3.4vw, 52px);
+      font-size: clamp(32px, 3.4vw, 50px);
       font-weight: 800;
-      line-height: 1.12;
+      line-height: 1.1;
       color: var(--text-white);
-      margin-bottom: 16px;
+      margin-bottom: 8px;
       letter-spacing: -0.8px;
-      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95);
-    }
-
-    .hero-subheadline .accent-fast {
-      color: var(--accent-green);
-      text-shadow: 0 0 22px rgba(0, 240, 118, 0.45);
     }
 
     .hero-body-text {
@@ -388,8 +747,7 @@
       color: #d1d5db;
       line-height: 1.65;
       margin-bottom: 24px;
-      max-width: 420px;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+      max-width: 440px;
     }
 
     .hero-buttons-row {
@@ -455,136 +813,59 @@
       transform: translateY(-2px);
     }
 
-    /* Center Column: Open Stage for Middle Picture with Centered Name Badge */
+    /* Center Column: 3D Canvas Stage */
     .hero-col-center {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-end;
-      min-height: auto;
-      height: 100%;
+      justify-content: center;
       position: relative;
       z-index: 3;
-      padding-bottom: 6px;
+      width: 100%;
     }
 
-    .hero-person-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 22px;
-      border-radius: 50px;
-      background: rgba(14, 17, 22, 0.82);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(0, 240, 118, 0.38);
-      font-size: 13.5px;
-      font-weight: 600;
-      color: var(--text-white);
-      white-space: nowrap;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.75), 0 0 20px rgba(0, 240, 118, 0.18);
-      transition: all 0.25s ease;
-    }
-
-    .hero-person-badge:hover {
-      border-color: var(--accent-green);
-      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.85), 0 0 28px rgba(0, 240, 118, 0.35);
-      transform: translateY(-2px);
-    }
-
-    .hero-person-badge .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent-green);
-      box-shadow: 0 0 10px var(--accent-green);
-    }
-
-    .hero-person-badge .badge-name {
-      color: #ffffff;
-      font-weight: 700;
-    }
-
-    .hero-person-badge .badge-role {
-      color: var(--text-gray);
-      font-weight: 500;
-    }
-
-    /* Right Column: Portrait Card + Social Connect (Right Shoulder) */
+    /* Right Column: Specs Card + Social Connect (Right Shoulder) */
     .hero-col-right {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      text-align: center;
+      align-items: flex-end;
+      text-align: right;
       z-index: 4;
-    }
-
-    .hero-portrait-wrapper {
-      position: relative;
-      width: 100%;
-      max-width: 290px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .hero-portrait-card {
-      position: relative;
-      width: 100%;
-      background: rgba(12, 14, 18, 0.7);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid var(--accent-green);
-      box-shadow: 0 0 30px rgba(0, 240, 118, 0.25), inset 0 0 15px rgba(0, 240, 118, 0.06);
-      border-radius: 24px;
-      padding: 12px;
-      overflow: hidden;
-    }
-
-    .portrait-status-dot {
-      position: absolute;
-      top: 22px;
-      left: 22px;
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--accent-green);
-      box-shadow: 0 0 12px var(--accent-green);
-      z-index: 10;
-    }
-
-    .hero-portrait-img {
-      width: 100%;
-      height: 350px;
-      object-fit: cover;
-      object-position: center 18%;
-      border-radius: 18px;
-      display: block;
-      filter: saturate(1.1) contrast(1.03) brightness(1.02);
+      gap: 16px;
     }
 
     .hero-connect-block {
-      margin-top: 18px;
+      margin-top: 4px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 10px;
+      align-items: flex-end;
+      gap: 8px;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    @media (max-width: 1024px) {
+      .hero-connect-block {
+        align-items: center;
+      }
     }
 
     .hero-connect-label {
-      font-size: 13.5px;
+      font-size: 13px;
       color: var(--text-dim);
       font-weight: 500;
+      font-family: var(--font-mono);
     }
 
     .hero-connect-icons {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .social-icon-btn {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
       border-radius: 10px;
       background: rgba(15, 17, 21, 0.65);
       backdrop-filter: blur(8px);
@@ -1553,16 +1834,51 @@
 </head>
 <body>
 
-  <!-- FULLSCREEN BACKGROUND PHOTO LAYER (USES EXACT UPLOADED PHOTO ISHWOR.JPEG) -->
-  <div class="fullscreen-photo-container" aria-hidden="true">
-    <img 
-      src="ishwor.jpeg" 
-      alt="Rameshwor Chaudhary" 
-      class="fullscreen-photo-img" 
-      onerror="this.src='rameshwor_hero.jpeg'"
-    />
-    <div class="fullscreen-photo-overlay"></div>
-    <div class="fullscreen-photo-spotlight"></div>
+  <!-- CINEMATIC 0-100 LOADING INTRO WITH 3D FLOATING PHOTO CLOUD -->
+  <div id="cinematic-intro-stage" role="dialog" aria-modal="true" aria-label="Loading Experience">
+    <!-- 3D Photo Cloud Perspective Layer -->
+    <div id="intro-photo-cloud"></div>
+
+    <!-- Top Status & Skip Action -->
+    <div class="intro-header-bar">
+      <div class="intro-brand-tag">
+        <span class="intro-status-beacon"></span>
+        <span>RAMESHWOR CHAUDHARY · PORTFOLIO</span>
+      </div>
+      <button id="intro-skip-btn" class="intro-skip-btn" aria-label="Skip Intro">
+        Skip Intro <span>[ESC]</span> ↗
+      </button>
+    </div>
+
+    <!-- Center Numeric Counter & Neural Status -->
+    <div class="intro-center-stage">
+      <div class="intro-counter-wrapper">
+        <span id="intro-counter-number">0</span>
+        <span class="counter-symbol">%</span>
+      </div>
+      <div id="intro-status-text" class="intro-status-text">INITIALIZING PORTFOLIO ENVIRONMENT</div>
+      <div class="intro-progress-bar-container">
+        <div id="intro-progress-bar-fill" class="intro-progress-bar-fill"></div>
+      </div>
+    </div>
+
+    <!-- Cinematic Title Sequence Reveal (at 100%) -->
+    <div id="intro-title-reveal">
+      <h1 class="cinematic-title">RAMESHWOR CHAUDHARY</h1>
+      <p class="cinematic-subtitle">AI/ML ENGINEER &amp; FULL-STACK DEVELOPER</p>
+    </div>
+
+    <!-- Bottom Metadata Strip -->
+    <div class="intro-footer-bar">
+      <div>CHANDIGARH UNIVERSITY · MACHINE LEARNING &amp; COMPUTER VISION</div>
+      <div>NEURAL CORE V2.6</div>
+    </div>
+  </div>
+
+  <!-- PERSISTENT 3D WEBGL BACKGROUND LAYER (VISIBLE ACROSS ALL SECTIONS) -->
+  <div class="hero-3d-bg-wrapper" aria-hidden="true">
+    <div id="hero-3d-canvas-container" class="hero-3d-canvas-container"></div>
+    <div class="hero-3d-ambient-overlay"></div>
   </div>
 
   <!-- HEADER / NAVBAR -->
@@ -1604,40 +1920,46 @@
       <div class="container hero-container">
         <div class="hero-grid">
 
-          <!-- Left Column: Innovate Develop Succeed + Pitch (Left Shoulder) -->
+          <!-- Left Column: Dynamic Greeting, Roles, Pitch & Action Buttons -->
           <div class="hero-col-left">
-            <div class="hero-build-kicker">
-              <span class="kicker-solid">Build</span>
-              <span class="kicker-stroke">Digital</span>
-              <span class="kicker-solid">Futures</span>
+            <div class="hero-build-kicker">// AI/ML ENGINEER &amp; FULL-STACK DEVELOPER</div>
+            <h1 class="hero-subheadline">HI, I'M RAMESHWOR</h1>
+            <div class="hero-role-rotator-wrapper">
+              <div id="hero-role-animated-text" class="hero-role-animated-text">CREATIVE DEVELOPER</div>
             </div>
-            <h1 class="hero-subheadline">
-              Innovate.<br/>Develop.<br/>Succeed. <span class="accent-fast">Fast.</span>
-            </h1>
             <p class="hero-body-text">
               Transforming complex engineering concepts into intelligent AI models, computer vision systems, and robust full-stack software tailored for real-world impact.
             </p>
+            <div class="hero-buttons-row">
+              <a href="#contact" class="btn-hero-primary">
+                <span>Start Project</span>
+                <span class="circle-arrow-icon">↗</span>
+              </a>
+              <a href="https://drive.google.com/file/d/1DvKLa_9qLvKnNjZk_dvXYV6HRBCgdOsx/view?usp=sharing" target="_blank" rel="noopener" class="btn-hero-secondary">
+                <span>Resume ↗</span>
+              </a>
+            </div>
           </div>
 
-          <!-- Center Column: Open Stage for Middle Picture -->
-          <div class="hero-col-center"></div>
-
-          <!-- Right Column: Small Rounded Portrait Card & Social Links (Right Shoulder) -->
+          <!-- Right Column: System Specs Card & Social Connect -->
           <div class="hero-col-right">
-            <div class="hero-portrait-wrapper">
-              <div class="hero-portrait-card">
-                <span class="portrait-status-dot"></span>
-                <img 
-                  src="ishwor.jpeg" 
-                  alt="Rameshwor Chaudhary Portrait" 
-                  class="hero-portrait-img"
-                  onerror="this.src='rameshwor_hero.jpeg'"
-                />
+            <div class="hero-spec-card">
+              <div class="spec-card-header">
+                <span class="spec-card-title">SYSTEM SPECS // 2026</span>
+                <span class="intro-status-beacon"></span>
+              </div>
+              <p class="spec-card-body">
+                AI/ML Engineer specializing in computer vision, neural pipelines, and scalable full-stack web applications.
+              </p>
+              <div class="spec-badge-list">
+                <div class="spec-badge-item"><span class="icon">◈</span> Chandigarh Univ · CGPA 8.42</div>
+                <div class="spec-badge-item"><span class="icon">◈</span> GitHub · 250+ Commits</div>
+                <div class="spec-badge-item"><span class="icon">◈</span> Status · Open to Opportunities</div>
               </div>
             </div>
 
             <div class="hero-connect-block">
-              <span class="hero-connect-label">Connect with me</span>
+              <span class="hero-connect-label">// CONNECT WITH ME</span>
               <div class="hero-connect-icons">
                 <a href="https://github.com/rameshworchaudhary" target="_blank" rel="noopener" class="social-icon-btn" title="GitHub">
                   <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -2361,5 +2683,61 @@
 
   <!-- Ishwor Assistant Core Script -->
   <script src="ishwor-assistant.js"></script>
+
+  <!-- Cinematic 3D Intro & WebGL Hero Controllers -->
+  <script src="/src/js/cinematic-intro.js"></script>
+  <script type="module">
+    import '/src/js/hero-3d.js';
+
+    // Prevent automatic browser scroll restoration on refresh/load
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      let hero3D = null;
+      
+      // Initialize 3D Hero WebGL Engine
+      if (typeof window.Hero3DExperience === 'function') {
+        hero3D = new window.Hero3DExperience('hero-3d-canvas-container');
+      }
+
+      // Initialize 0-100 Cinematic Intro Sequence with 3D Photo Cloud
+      if (typeof window.CinematicIntro === 'function') {
+        new window.CinematicIntro({
+          onComplete: () => {
+            if (hero3D && typeof hero3D.reveal === 'function') {
+              hero3D.reveal();
+            }
+          }
+        });
+      }
+
+      // Dynamic Role Cycler (Reference 2 style)
+      const roleElement = document.getElementById('hero-role-animated-text');
+      if (roleElement) {
+        const roles = [
+          'CREATIVE DEVELOPER',
+          'AI/ML ENGINEER',
+          'COMPUTER VISION DEV',
+          'FULL-STACK ARCHITECT',
+          'NEURAL SYSTEMS BUILDER'
+        ];
+        let roleIdx = 0;
+        setInterval(() => {
+          roleElement.classList.add('slide-out');
+          setTimeout(() => {
+            roleIdx = (roleIdx + 1) % roles.length;
+            roleElement.innerText = roles[roleIdx];
+            roleElement.classList.remove('slide-out');
+            roleElement.classList.add('slide-in');
+            setTimeout(() => {
+              roleElement.classList.remove('slide-in');
+            }, 30);
+          }, 350);
+        }, 2800);
+      }
+    });
+  </script>
 </body>
 </html>

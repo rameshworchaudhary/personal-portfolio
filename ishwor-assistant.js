@@ -461,15 +461,18 @@
   // Speech Synthesis
   function speakText(text) {
     if (isMuted || !('speechSynthesis' in window)) {
+      if (!('speechSynthesis' in window)) {
+        setStatus('', 'Voice unavailable in this browser');
+      }
       return;
     }
 
     stopSpeech();
     unlockAudio();
 
-    if (window.speechSynthesis.paused) {
-      window.speechSynthesis.resume();
-    }
+    // Clear any queued unlock/greeting utterance before speaking the reply.
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
 
     isSpeaking = true;
     setStatus('speaking', 'Speaking...');
@@ -508,6 +511,16 @@
 
     try {
       window.speechSynthesis.speak(utterance);
+      // Some Chromium builds load voices after the first speak call.
+      if (cachedVoices.length === 0) {
+        setTimeout(() => {
+          if (isSpeaking && !window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.resume();
+            window.speechSynthesis.speak(utterance);
+          }
+        }, 250);
+      }
     } catch (err) {
       console.warn('speechSynthesis.speak exception:', err);
       isSpeaking = false;

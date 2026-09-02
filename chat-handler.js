@@ -257,7 +257,7 @@ async function tryNvidiaNemotron(trimmedMsg, history) {
 
   const modelsToTry = [
     (process.env.NEMOTRON_MODEL || '').trim(),
-    isOpenRouter ? 'nvidia/nemotron-4-340b-instruct' : 'nvidia/llama-3.1-nemotron-70b-instruct',
+    'nvidia/nemotron-3-super-120b-a12b',
     'meta/llama-3.3-70b-instruct'
   ].filter(Boolean);
 
