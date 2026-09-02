@@ -45,17 +45,6 @@
   }
   </script>
 
-  <!-- Import Map for modern Three.js ES Modules -->
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
-      "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-    }
-  }
-  </script>
-
   <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -344,48 +333,6 @@
       color: var(--text-dim);
     }
 
-    /* ── GLOBAL PERSISTENT 3D BACKGROUND LAYER (VISIBLE ACROSS ENTIRE PAGE) ── */
-    .hero-3d-bg-wrapper {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      height: 100dvh;
-      z-index: 0;
-      overflow: hidden;
-      pointer-events: none;
-      background: #08090b url('/public/assets/intro/photo-02.webp') center center / cover no-repeat;
-    }
-
-    .hero-3d-canvas-container {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
-
-    .hero-3d-canvas-container canvas {
-      width: 100% !important;
-      height: 100% !important;
-      display: block;
-      outline: none;
-    }
-
-    .hero-3d-ambient-overlay {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
-      background: 
-        /* Subtle edge vignette that lets the full screen 3D model shine */
-        radial-gradient(circle at 50% 50%, transparent 45%, rgba(8, 9, 11, 0.45) 85%, rgba(8, 9, 11, 0.75) 100%),
-        /* Gentle soft shade on far left for headline text contrast */
-        linear-gradient(90deg, rgba(8, 9, 11, 0.55) 0%, rgba(8, 9, 11, 0.25) 20%, transparent 45%, transparent 100%),
-        /* Top navbar shade and bottom transition */
-        linear-gradient(to bottom, rgba(8, 9, 11, 0.25) 0%, transparent 15%, transparent 85%, rgba(8, 9, 11, 0.75) 100%);
-    }
-
     /* Dynamic Role Rotator */
     .hero-role-rotator-wrapper {
       min-height: 48px;
@@ -490,6 +437,10 @@
 
     body {
       background-color: var(--bg-dark);
+      background-image: linear-gradient(rgba(8, 9, 11, 0.22), rgba(8, 9, 11, 0.22)), url('/public/assets/intro/photo-02.webp');
+      background-position: center 18%;
+      background-size: cover;
+      background-attachment: fixed;
       color: var(--text-white);
       font-family: var(--font-body);
       font-size: 15px;
@@ -1875,12 +1826,6 @@
     </div>
   </div>
 
-  <!-- PERSISTENT 3D WEBGL BACKGROUND LAYER (VISIBLE ACROSS ALL SECTIONS) -->
-  <div class="hero-3d-bg-wrapper" aria-hidden="true">
-    <div id="hero-3d-canvas-container" class="hero-3d-canvas-container"></div>
-    <div class="hero-3d-ambient-overlay"></div>
-  </div>
-
   <!-- HEADER / NAVBAR -->
   <header id="header">
     <div class="container nav-inner">
@@ -2684,33 +2629,18 @@
   <!-- Ishwor Assistant Core Script -->
   <script src="ishwor-assistant.js"></script>
 
-  <!-- Cinematic 3D Intro & WebGL Hero Controllers -->
+  <!-- Cinematic Intro Controller -->
   <script src="/src/js/cinematic-intro.js"></script>
   <script type="module">
-    import '/src/js/hero-3d.js';
-
     // Prevent automatic browser scroll restoration on refresh/load
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      let hero3D = null;
-      
-      // Initialize 3D Hero WebGL Engine
-      if (typeof window.Hero3DExperience === 'function') {
-        hero3D = new window.Hero3DExperience('hero-3d-canvas-container');
-      }
-
-      // Initialize 0-100 Cinematic Intro Sequence with 3D Photo Cloud
+      // Initialize 0-100 Cinematic Intro Sequence with photo cloud
       if (typeof window.CinematicIntro === 'function') {
-        new window.CinematicIntro({
-          onComplete: () => {
-            if (hero3D && typeof hero3D.reveal === 'function') {
-              hero3D.reveal();
-            }
-          }
-        });
+        new window.CinematicIntro();
       }
 
       // Dynamic Role Cycler (Reference 2 style)
