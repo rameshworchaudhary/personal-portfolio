@@ -1,0 +1,7 @@
+# Rameshwor Chaudhary Portfolio
+
+Personal portfolio for Rameshwor Chaudhary, an AI/ML Engineer and full-stack developer.
+
+- [Portfolio](https://www.rameshworchaudhary.com.np/)
+- [GitHub](https://github.com/rameshworchaudhary)
+- [LinkedIn](https://www.linkedin.com/in/chaudhari-ishwor/)

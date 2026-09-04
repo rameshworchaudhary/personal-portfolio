@@ -22,6 +22,11 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
+  res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  res.header('X-Content-Type-Options', 'nosniff');
+  res.header('X-Frame-Options', 'DENY');
+  res.header('Cross-Origin-Opener-Policy', 'same-origin');
+  res.header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.web3forms.com https:; frame-ancestors 'none'; base-uri 'self'");
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');

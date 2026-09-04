@@ -22,8 +22,7 @@ class CinematicIntro {
     // Keep the original formats while using one predictable numbered sequence.
     this.photoList = Array.from({ length: 31 }, (_, i) => {
       const num = String(i + 1).padStart(2, '0');
-      const extension = i < 3 ? 'webp' : 'jpeg';
-      return `/public/assets/intro/photo-${num}.${extension}`;
+      return `/public/assets/intro/photo-${num}.webp`;
     });
 
     this.init();
@@ -41,6 +40,17 @@ class CinematicIntro {
 
     // Build the 3D photo deck & floating cloud
     this.createPhotoDeck();
+
+    // Keep the first three cards available for the intro; load the rest off the critical path.
+    const loadRemainingPhotos = () => this.cards.slice(3).forEach((card) => {
+      card.img.loading = 'lazy';
+      card.img.src = card.url;
+    });
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(loadRemainingPhotos, { timeout: 1200 });
+    } else {
+      window.setTimeout(loadRemainingPhotos, 250);
+    }
 
     // Start counter animation
     this.startCounter();
@@ -72,9 +82,14 @@ class CinematicIntro {
       el.className = 'intro-deck-card';
       
       const img = document.createElement('img');
-      img.src = url;
       img.alt = `Rameshwor Chaudhary - Memory ${index + 1}`;
-      img.loading = 'eager';
+      img.width = 135;
+      img.height = 175;
+      img.decoding = 'async';
+      if (index < 3) {
+        img.src = url;
+        img.loading = 'eager';
+      }
       el.appendChild(img);
 
       // Card metadata badge
@@ -93,6 +108,8 @@ class CinematicIntro {
 
       return {
         el,
+        img,
+        url,
         index,
         targetX: Math.cos(angle) * radiusX,
         targetY: Math.sin(angle) * radiusY,

@@ -50,9 +50,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 
-  <!-- Confetti Library -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-
   <!-- Ishwor AI Voice Assistant Styles -->
   <link rel="stylesheet" href="ishwor-assistant.css">
 
@@ -2610,9 +2607,10 @@
           if (data.success) {
             showToast('Message sent successfully! Thank you.', true);
             contactForm.reset();
-            if (typeof confetti === 'function') {
-              confetti({ particleCount: 60, spread: 70, origin: { y: 0.85 } });
-            }
+            const confettiScript = document.createElement('script');
+            confettiScript.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js';
+            confettiScript.onload = () => window.confetti?.({ particleCount: 60, spread: 70, origin: { y: 0.85 } });
+            document.head.appendChild(confettiScript);
           } else {
             showToast(data.message || 'Error sending message. Please email directly.', false);
           }
