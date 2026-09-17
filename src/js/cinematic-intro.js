@@ -22,7 +22,7 @@ class CinematicIntro {
     // Keep the original formats while using one predictable numbered sequence.
     this.photoList = Array.from({ length: 31 }, (_, i) => {
       const num = String(i + 1).padStart(2, '0');
-      return `/public/assets/intro/photo-${num}.webp`;
+      return `assets/intro/photo-${num}.webp`;
     });
 
     this.init();
@@ -30,6 +30,9 @@ class CinematicIntro {
 
   init() {
     if (!this.container) return;
+
+    // Lock body scroll during intro
+    document.body.style.overflow = 'hidden';
 
     // Check prefers-reduced-motion
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -40,17 +43,6 @@ class CinematicIntro {
 
     // Build the 3D photo deck & floating cloud
     this.createPhotoDeck();
-
-    // Keep the first three cards available for the intro; load the rest off the critical path.
-    const loadRemainingPhotos = () => this.cards.slice(3).forEach((card) => {
-      card.img.loading = 'lazy';
-      card.img.src = card.url;
-    });
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(loadRemainingPhotos, { timeout: 1200 });
-    } else {
-      window.setTimeout(loadRemainingPhotos, 250);
-    }
 
     // Start counter animation
     this.startCounter();
@@ -86,10 +78,8 @@ class CinematicIntro {
       img.width = 135;
       img.height = 175;
       img.decoding = 'async';
-      if (index < 3) {
-        img.src = url;
-        img.loading = 'eager';
-      }
+      img.src = url;
+      img.loading = index < 8 ? 'eager' : 'lazy';
       el.appendChild(img);
 
       // Card metadata badge
@@ -134,49 +124,47 @@ class CinematicIntro {
     let mouseX = 0;
     let mouseY = 0;
 
-    window.addEventListener('mousemove', (e) => {
-      mouseX = (e.clientX / window.innerWidth - 0.5) * 50;
-      mouseY = (e.clientY / window.innerHeight - 0.5) * 50;
-    });
+    const onMouseMove = (e) => {
+      mouseX = (e.clientX / window.innerWidth - 0.5) * 40;
+      mouseY = (e.clientY / window.innerHeight - 0.5) * 40;
+    };
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
 
     const update = () => {
       if (this.isFinished) return;
 
       const progressRatio = this.progress / 100;
+      const spreadFactor = Math.min(1.2, 0.2 + progressRatio * 0.95);
+      const rotProgress = 1 - progressRatio * 0.6;
 
-      this.cards.forEach((card) => {
+      for (let i = 0; i < this.cards.length; i++) {
+        const card = this.cards[i];
+
         // Orbit motion
         card.angle += card.orbitSpeed;
-        
-        // As progress goes 0 -> 100, the cards fan out from tight center stack to wide 3D space
-        const spreadFactor = Math.min(1.2, 0.2 + progressRatio * 0.95);
         
         const orbitX = Math.cos(card.angle) * card.radiusX * spreadFactor;
         const orbitY = Math.sin(card.angle) * card.radiusY * spreadFactor;
         const orbitZ = card.targetZ + Math.sin(card.angle) * 80;
 
         // Smooth Lerp
-        card.currentX += (orbitX + mouseX * 0.8 - card.currentX) * 0.08;
-        card.currentY += (orbitY + mouseY * 0.8 - card.currentY) * 0.08;
-        card.currentZ += (orbitZ - card.currentZ) * 0.08;
+        card.currentX += (orbitX + mouseX * 0.6 - card.currentX) * 0.09;
+        card.currentY += (orbitY + mouseY * 0.6 - card.currentY) * 0.09;
+        card.currentZ += (orbitZ - card.currentZ) * 0.09;
 
         const depthFactor = Math.max(0.2, (800 + card.currentZ) / 800);
-        const blurAmount = Math.abs(card.currentZ) > 220 ? Math.min(5, (Math.abs(card.currentZ) - 220) * 0.02) : 0;
-        const opacity = Math.min(1, Math.max(0.35, 0.4 + progressRatio * 0.6));
+        const rotZ = card.baseRotZ + (card.fanRot * rotProgress);
+        const rotY = card.baseRotY + (mouseX * 0.15);
+        const rotX = card.baseRotX - (mouseY * 0.15);
 
-        const rotZ = card.baseRotZ + (card.fanRot * (1 - progressRatio * 0.6));
-        const rotY = card.baseRotY + (mouseX * 0.2);
-        const rotX = card.baseRotX - (mouseY * 0.2);
-
+        // Hardware-accelerated 3D transform without costly CSS filter blurs
         card.el.style.transform = `translate3d(${card.currentX.toFixed(1)}px, ${card.currentY.toFixed(1)}px, ${card.currentZ.toFixed(1)}px) rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg) rotateZ(${rotZ.toFixed(1)}deg) scale(${(card.scale * depthFactor).toFixed(2)})`;
-        card.el.style.filter = blurAmount > 0.4 ? `blur(${blurAmount.toFixed(1)}px)` : 'none';
-        card.el.style.opacity = opacity;
-      });
+      }
 
       this.animationFrameId = requestAnimationFrame(update);
     };
 
-    update();
+    this.animationFrameId = requestAnimationFrame(update);
   }
 
   startCounter() {
@@ -245,6 +233,10 @@ class CinematicIntro {
       this.titleRevealEl.classList.add('reveal-active');
     }
 
+    if (window.playTransitionWhoosh) {
+      window.playTransitionWhoosh(520, 280);
+    }
+
     setTimeout(() => {
       this.finishIntro(false);
     }, 1000);
@@ -258,13 +250,17 @@ class CinematicIntro {
       cancelAnimationFrame(this.animationFrameId);
     }
 
+    document.body.style.overflow = '';
+
     if (this.container) {
       if (immediate) {
         this.container.style.display = 'none';
+        if (this.cloudContainer) this.cloudContainer.innerHTML = '';
       } else {
         this.container.classList.add('fade-out');
         setTimeout(() => {
           this.container.style.display = 'none';
+          if (this.cloudContainer) this.cloudContainer.innerHTML = '';
         }, 750);
       }
     }

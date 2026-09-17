@@ -1,6 +1,6 @@
 {
-  "name": "Rameshwor Chaudhary Portfolio",
-  "description": "Personal portfolio website for Rameshwor Chaudhary, AI/ML Engineer",
+  "name": "Rameshwor Chaudhary — AI/ML Engineer & Developer",
+  "description": "Personal portfolio of Rameshwor Chaudhary, AI/ML engineering student building practical machine learning models, computer vision systems, and full-stack software.",
   "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
