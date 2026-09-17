@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "echo 'No build step required'",
+    "build": "node scripts/prepare-deployment.js",
     "dev": "node server.js",
     "start": "node server.js",
     "lint": "echo 'No lint errors'"

@@ -1208,10 +1208,11 @@ function initCinematicIntro() {
   // Lock body scroll while intro is running
   document.body.style.overflow = 'hidden';
 
-  // 31 Photo URLs
+  // 31 Photo URLs with multi-environment fallback
   const photoUrls = Array.from({ length: 31 }, (_, i) => {
     const num = String(i + 1).padStart(2, '0');
-    return `assets/intro/photo-${num}.webp`;
+    const prefix = window.__INTRO_WORKING_PREFIX || '';
+    return `${prefix}assets/intro/photo-${num}.webp`;
   });
 
   // Create cards efficiently
@@ -1221,10 +1222,37 @@ function initCinematicIntro() {
       const numStr = String(i + 1).padStart(2, '0');
       const card = document.createElement('div');
       card.className = 'intro-deck-card';
-      card.innerHTML = `
-        <img src="${url}" alt="Memory ${numStr}" loading="eager" />
-        <span class="deck-card-num">${numStr}</span>
-      `;
+      
+      const img = document.createElement('img');
+      img.alt = `Memory ${numStr}`;
+      img.loading = i < 8 ? 'eager' : 'lazy';
+
+      const candidates = [
+        url,
+        `public/assets/intro/photo-${numStr}.webp`,
+        `assets/intro/photo-${numStr}.webp`,
+        `/public/assets/intro/photo-${numStr}.webp`,
+        `/assets/intro/photo-${numStr}.webp`,
+        'public/assets/hero/hero-portrait.jpg',
+        'assets/hero/hero-portrait.jpg',
+        'src/assets/images/ishwor.jpeg'
+      ];
+
+      let cIdx = 0;
+      img.src = candidates[0];
+      img.onerror = () => {
+        cIdx++;
+        if (cIdx < candidates.length) {
+          img.src = candidates[cIdx];
+        }
+      };
+
+      const numBadge = document.createElement('span');
+      numBadge.className = 'deck-card-num';
+      numBadge.textContent = numStr;
+
+      card.appendChild(img);
+      card.appendChild(numBadge);
       photoCloud.appendChild(card);
       deckCards.push(card);
     });

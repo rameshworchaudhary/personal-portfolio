@@ -149,45 +149,60 @@ class Hero3DExperience {
     this.sculptureGroup = new THREE.Group();
 
     // ── LOAD THE SELF-CONTAINED STANDALONE GLB MODEL ──
-    // All textures (Portrait JPEG + Back Chassis PNG) and 3D volumetric geometry are embedded inside the GLB
-    this.gltfLoader.load(
-      '/public/models/rameshwor-portrait-3d.glb',
-      (gltf) => {
-        const root = gltf.scene;
+    // Try multiple candidate paths to ensure it works across all deployment configurations
+    const modelCandidates = [
+      'models/rameshwor-portrait-3d.glb',
+      'public/models/rameshwor-portrait-3d.glb',
+      '/models/rameshwor-portrait-3d.glb',
+      '/public/models/rameshwor-portrait-3d.glb'
+    ];
 
-        // Center the 3D model's pivot point
-        const box = new THREE.Box3().setFromObject(root);
-        const center = new THREE.Vector3();
-        box.getCenter(center);
-        root.position.set(-center.x, -center.y, -center.z);
-
-        root.traverse((child) => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-
-            // Ensure textures decode with standard sRGB color space and crisp mipmaps
-            if (child.material) {
-              const mats = Array.isArray(child.material) ? child.material : [child.material];
-              mats.forEach((mat) => {
-                if (mat.map) {
-                  mat.map.colorSpace = THREE.SRGBColorSpace;
-                  mat.map.generateMipmaps = true;
-                  mat.map.needsUpdate = true;
-                }
-              });
-            }
-          }
-        });
-
-        // Add to sculpture group
-        this.sculptureGroup.add(root);
-      },
-      undefined,
-      (err) => {
-        console.error('Error loading standalone GLB:', err);
+    const loadNextCandidate = (index) => {
+      if (index >= modelCandidates.length) {
+        console.warn('All GLB candidate paths failed to load.');
+        return;
       }
-    );
+      this.gltfLoader.load(
+        modelCandidates[index],
+        (gltf) => {
+          const root = gltf.scene;
+
+          // Center the 3D model's pivot point
+          const box = new THREE.Box3().setFromObject(root);
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+          root.position.set(-center.x, -center.y, -center.z);
+
+          root.traverse((child) => {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+
+              // Ensure textures decode with standard sRGB color space and crisp mipmaps
+              if (child.material) {
+                const mats = Array.isArray(child.material) ? child.material : [child.material];
+                mats.forEach((mat) => {
+                  if (mat.map) {
+                    mat.map.colorSpace = THREE.SRGBColorSpace;
+                    mat.map.generateMipmaps = true;
+                    mat.map.needsUpdate = true;
+                  }
+                });
+              }
+            }
+          });
+
+          // Add to sculpture group
+          this.sculptureGroup.add(root);
+        },
+        undefined,
+        (err) => {
+          loadNextCandidate(index + 1);
+        }
+      );
+    };
+
+    loadNextCandidate(0);
 
     this.modelGroup.add(this.sculptureGroup);
   }

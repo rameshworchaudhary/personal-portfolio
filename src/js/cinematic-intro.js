@@ -22,7 +22,9 @@ class CinematicIntro {
     // Keep the original formats while using one predictable numbered sequence.
     this.photoList = Array.from({ length: 31 }, (_, i) => {
       const num = String(i + 1).padStart(2, '0');
-      return `assets/intro/photo-${num}.webp`;
+      // If we previously detected a working prefix in this session, use it
+      const prefix = window.__INTRO_WORKING_PREFIX || '';
+      return `${prefix}assets/intro/photo-${num}.webp`;
     });
 
     this.init();
@@ -78,8 +80,40 @@ class CinematicIntro {
       img.width = 135;
       img.height = 175;
       img.decoding = 'async';
-      img.src = url;
+
+      const numStr = String(index + 1).padStart(2, '0');
+      const candidatePaths = [
+        url,
+        `public/assets/intro/photo-${numStr}.webp`,
+        `assets/intro/photo-${numStr}.webp`,
+        `/public/assets/intro/photo-${numStr}.webp`,
+        `/assets/intro/photo-${numStr}.webp`,
+        'public/assets/hero/hero-portrait.jpg',
+        'assets/hero/hero-portrait.jpg',
+        'public/assets/hero/hero-portrait-cutout.png',
+        'assets/hero/hero-portrait-cutout.png',
+        'src/assets/images/ishwor.jpeg'
+      ];
+
+      let candidateIdx = 0;
+      img.src = candidatePaths[0];
       img.loading = index < 8 ? 'eager' : 'lazy';
+
+      img.onerror = () => {
+        candidateIdx++;
+        if (candidateIdx < candidatePaths.length) {
+          img.src = candidatePaths[candidateIdx];
+        }
+      };
+
+      img.onload = () => {
+        // Remember which prefix succeeded so future cards resolve immediately
+        if (!window.__INTRO_WORKING_PREFIX && candidatePaths[candidateIdx]) {
+          const matched = candidatePaths[candidateIdx];
+          if (matched.startsWith('public/')) window.__INTRO_WORKING_PREFIX = 'public/';
+        }
+      };
+
       el.appendChild(img);
 
       // Card metadata badge
