@@ -15,6 +15,7 @@ import {
   visibleProjects,
   stepProject,
   CONTACT,
+  INFINITY,
 } from '../data'
 
 const Ext = ({ href, children, className }) => (
@@ -38,8 +39,10 @@ function Scramble({ text, as: Tag = 'h2' }) {
   useEffect(() => {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
     let frame = 0
+    let id = 0
     const total = 22
-    const id = setInterval(() => {
+    const start = setTimeout(() => (id = setInterval(tick, 32)), 550) // wait for the panel to appear
+    const tick = () => {
       frame++
       const reveal = Math.floor((frame / total) * text.length)
       setShown(
@@ -52,8 +55,11 @@ function Scramble({ text, as: Tag = 'h2' }) {
         clearInterval(id)
         setShown(text)
       }
-    }, 32)
-    return () => clearInterval(id)
+    }
+    return () => {
+      clearTimeout(start)
+      clearInterval(id)
+    }
   }, [text])
   return (
     <Tag>
@@ -68,7 +74,9 @@ function HomePanel({ go }) {
   return (
     <div className="home">
       <p className="hello">Welcome to my world</p>
-      <h1 className="name">{PROFILE.short}</h1>
+      <h1 className="name">
+        <span>Rameshwor</span> <span>Chaudhary</span>
+      </h1>
       <p className="role">{PROFILE.role}</p>
       <p className="lede">{PROFILE.quote}</p>
       <dl className="stats">
@@ -94,7 +102,7 @@ function HomePanel({ go }) {
 }
 
 /* ------------------------------ Universe ----------------------------- */
-function UniversePanel({ filter, setFilter, onOpenDoor }) {
+function UniversePanel({ filter, setFilter }) {
   const count = (id) => (id === 'all' ? SKILLS.length : SKILLS.filter((s) => s.cat === id).length)
   return (
     <div>
@@ -135,22 +143,15 @@ function UniversePanel({ filter, setFilter, onOpenDoor }) {
           </li>
         ))}
       </ul>
-      {onOpenDoor && (
-        <div className="door-action-wrap">
-          <button type="button" className="btn-door-launch" onClick={() => onOpenDoor(2)}>
-            <span className="door-icon">🚪</span> OPEN GATEWAY 03: WORK & EXPERIENCE →
-          </button>
-        </div>
-      )}
     </div>
   )
 }
 
 /* ------------------------------ Experience --------------------------- */
-function ExperiencePanel({ idx, setIdx, onOpenDoor }) {
+function ExperiencePanel({ idx, setIdx }) {
   const e = EXPERIENCE[idx]
   return (
-    <div className="exp-panel-wrap">
+    <div>
       <Scramble text="Work & Experience" />
       <p className="lede">{EXPERIENCE_INTRO}</p>
       <div className="tabs" role="tablist" aria-label="Experience">
@@ -167,131 +168,79 @@ function ExperiencePanel({ idx, setIdx, onOpenDoor }) {
           </button>
         ))}
       </div>
+      <article key={e.org}>
+        <p className="tagline">
+          {e.tag}, {e.period}
+        </p>
+        <h3>{e.title}</h3>
+        <p className="meta">{e.sub}</p>
+        <p>{e.summary}</p>
 
-      <article className="exp-article">
-        <div className="exp-header-top">
-          <p className="tagline">
-            {e.tag} • {e.period}
-          </p>
-          {e.status && (
-            <span className="status-badge">
-              <span className="live-dot" /> {e.status}
-            </span>
-          )}
-        </div>
+        <p className="list-title">About the engagement</p>
+        <p>{e.context}</p>
 
-        <h3 className="exp-title">{e.title}</h3>
-        <p className="meta exp-sub">{e.sub}</p>
-
-        {e.kpis && (
-          <div className="kpi-grid">
-            {e.kpis.map((k) => (
-              <div key={k.label} className="kpi-card">
-                <div className="kpi-val">{k.value}</div>
-                <div className="kpi-lbl">{k.label}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="summary-box">
-          <p>{e.summary}</p>
-        </div>
-
-        <h4 className="section-subtitle">Key Technical Implementations & Architecture</h4>
-        <ul className="points exp-points">
+        <p className="list-title">What I did</p>
+        <ul className="points">
           {e.points.map((p) => (
-            <li key={p}>
-              <span className="bullet-chevron">›</span>
-              <span>{p}</span>
-            </li>
+            <li key={p}>{p}</li>
           ))}
         </ul>
 
-        <h4 className="section-subtitle">Core Technologies & Tooling</h4>
-        <Chips items={e.tech} />
+        <p className="list-title">{e.phasesTitle}</p>
+        <dl className="phases">
+          {e.phases.map((ph) => (
+            <div key={ph.t}>
+              <dt>{ph.t}</dt>
+              <dd>{ph.d}</dd>
+            </div>
+          ))}
+        </dl>
 
-        {onOpenDoor && (
-          <div className="door-action-wrap">
-            <button type="button" className="btn-door-launch" onClick={() => onOpenDoor(3)}>
-              <span className="door-icon">🚪</span> OPEN GATEWAY 04: ACADEMIC EDUCATION →
-            </button>
-          </div>
-        )}
+        <p className="list-title">What I took away</p>
+        <p>{e.learned}</p>
+
+        <p className="list-title">Tools</p>
+        <Chips items={e.tech} />
       </article>
     </div>
   )
 }
 
 /* ------------------------------ Education ---------------------------- */
-function EducationPanel({ onOpenDoor }) {
+function EducationPanel() {
   return (
-    <div className="edu-panel-wrap">
+    <div>
       <Scramble text="Academic Education" />
       <p className="lede">{EDUCATION_INTRO}</p>
       {EDUCATION.map((ed) => (
-        <article key={ed.degree} className="edu edu-expanded-card">
-          <div className="edu-card-top">
-            <p className="tagline">
-              {ed.period}
-            </p>
-            <span className="badge-pill">{ed.badge}</span>
-          </div>
-          <h3 className="edu-degree">{ed.degree}</h3>
-          <p className="meta edu-school">{ed.school}</p>
-
-          {ed.metrics && (
-            <div className="kpi-grid edu-kpi-grid">
-              {ed.metrics.map((m) => (
-                <div key={m.label} className="kpi-card">
-                  <div className="kpi-val">{m.value}</div>
-                  <div className="kpi-lbl">{m.label}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <p className="edu-summary">{ed.summary}</p>
-
-          {ed.highlights && (
-            <div className="edu-highlights-block">
-              <h4 className="section-subtitle">Academic Highlights & Research</h4>
-              <ul className="points">
-                {ed.highlights.map((h, i) => (
-                  <li key={i}>
-                    <span className="bullet-chevron">›</span>
-                    <span>{h}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
+        <article key={ed.degree} className="edu">
+          <p className="tagline">
+            {ed.period}, {ed.badge}
+          </p>
+          <h3>{ed.degree}</h3>
+          <p className="meta">{ed.school}</p>
+          <p>{ed.summary}</p>
+          <p>{ed.focus}</p>
           <p className="list-title">{ed.listTitle}</p>
-          <Chips items={ed.list} />
-
-          {ed.honor && (
-            <div className="edu-honor-box">
-              <span className="honor-icon">★</span>
-              <span>{ed.honor}</span>
-            </div>
-          )}
+          <dl className="phases">
+            {ed.courses.map((c) => (
+              <div key={c.name}>
+                <dt>{c.name}</dt>
+                <dd>{c.note}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="list-title">How it connects to my work</p>
+          <p>{ed.applied}</p>
+          <p className="meta">{ed.honor}</p>
         </article>
       ))}
-
-      {onOpenDoor && (
-        <div className="door-action-wrap">
-          <button type="button" className="btn-door-launch" onClick={() => onOpenDoor(4)}>
-            <span className="door-icon">🚪</span> OPEN GATEWAY 05: THE HOLO THEATER →
-          </button>
-        </div>
-      )}
     </div>
   )
 }
 
 /* ------------------------------- Theater ----------------------------- */
-function TheaterPanel({ idx, setIdx, filter, setFilter, onOpenDoor }) {
+function TheaterPanel({ idx, setIdx, filter, setFilter }) {
   const p = PROJECTS[idx]
   const list = visibleProjects(filter)
   const pos = list.indexOf(idx) + 1
@@ -338,15 +287,6 @@ function TheaterPanel({ idx, setIdx, filter, setFilter, onOpenDoor }) {
           </button>
         </div>
       </article>
-
-      {onOpenDoor && (
-        <div className="door-action-wrap">
-          <button type="button" className="btn-door-launch" onClick={() => onOpenDoor(5)}>
-            <span className="door-icon">🚪</span> OPEN GATEWAY 06: START A CONVERSATION →
-          </button>
-        </div>
-      )}
-
       <h3>All projects</h3>
       <ul className="proj-list">
         {list.map((i) => (
@@ -421,7 +361,7 @@ function ContactForm() {
   )
 }
 
-function ContactPanel({ onEnterInfinity }) {
+function ContactPanel() {
   const [copied, setCopied] = useState(false)
   const copy = async () => {
     try {
@@ -458,18 +398,57 @@ function ContactPanel({ onEnterInfinity }) {
       <p className="meta">{PROFILE.location}</p>
       <p className="meta">Tip: the badges orbiting the beacon are clickable too.</p>
       <ContactForm />
+    </div>
+  )
+}
 
-      {onEnterInfinity && (
-        <div className="infinity-action-wrap">
-          <button type="button" className="btn-infinity-launch" onClick={onEnterInfinity}>
-            <span className="infinity-icon">∞</span>
-            <div className="infinity-btn-text">
-              <span className="infinity-main">UNLOCK INFINITY HYPERSPACE PORTAL</span>
-              <span className="infinity-sub">Continuous forward voyage into deep cosmos • Never need to return</span>
-            </div>
-          </button>
-        </div>
-      )}
+/* ------------------------------- Infinity Portal ----------------------------- */
+function InfinityPanel({ go, onWarpHome }) {
+  const triggerAssistant = () => {
+    const trigger = document.getElementById('ishwor-assistant-trigger')
+    if (trigger) trigger.click()
+  }
+
+  const handleReturn = onWarpHome || (() => go(0))
+
+  return (
+    <div className="infinity-panel">
+      <Scramble text={INFINITY.heading} />
+      <p className="lede">{INFINITY.blurb}</p>
+      <p className="meta" style={{ color: 'var(--room)' }}>
+        {INFINITY.vision}
+      </p>
+
+      <dl className="stats">
+        {INFINITY.stats.map((s) => (
+          <div key={s.label}>
+            <dt>{s.label}</dt>
+            <dd>{s.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <p className="list-title">Active & Future Research Horizons</p>
+      <dl className="phases">
+        {INFINITY.horizons.map((h) => (
+          <div key={h.title}>
+            <dt style={{ color: 'var(--ink)' }}>{h.title}</dt>
+            <dd>{h.desc}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className="actions" style={{ marginTop: '24px' }}>
+        <button type="button" className="btn primary infinity-warp-btn" onClick={handleReturn}>
+          ↺ Loop through Portal to Room 1 (Home)
+        </button>
+        <button type="button" className="btn" onClick={triggerAssistant}>
+          🎙️ Ask Ishwor AI Assistant
+        </button>
+        <Ext className="btn" href={PROFILE.resume}>
+          Resume (PDF)
+        </Ext>
+      </div>
     </div>
   )
 }
@@ -478,6 +457,7 @@ function ContactPanel({ onEnterInfinity }) {
 export default function RoomPanel({
   room,
   go,
+  onWarpHome,
   filter,
   setFilter,
   expIndex,
@@ -486,21 +466,23 @@ export default function RoomPanel({
   setProjIndex,
   projFilter,
   setProjFilter,
-  onOpenDoor,
-  onEnterInfinity,
 }) {
-  switch (ROOMS[room].id) {
+  switch (ROOMS[room]?.id) {
     case 'home':
-      return <HomePanel go={go} onOpenDoor={onOpenDoor} />
+      return <HomePanel go={go} />
     case 'universe':
-      return <UniversePanel filter={filter} setFilter={setFilter} onOpenDoor={onOpenDoor} />
+      return <UniversePanel filter={filter} setFilter={setFilter} />
     case 'experience':
-      return <ExperiencePanel idx={expIndex} setIdx={setExpIndex} onOpenDoor={onOpenDoor} />
+      return <ExperiencePanel idx={expIndex} setIdx={setExpIndex} />
     case 'education':
-      return <EducationPanel onOpenDoor={onOpenDoor} />
+      return <EducationPanel />
     case 'theater':
-      return <TheaterPanel idx={projIndex} setIdx={setProjIndex} filter={projFilter} setFilter={setProjFilter} onOpenDoor={onOpenDoor} />
+      return <TheaterPanel idx={projIndex} setIdx={setProjIndex} filter={projFilter} setFilter={setProjFilter} />
+    case 'contact':
+      return <ContactPanel />
+    case 'infinity':
+      return <InfinityPanel go={go} onWarpHome={onWarpHome} />
     default:
-      return <ContactPanel onEnterInfinity={onEnterInfinity} />
+      return <ContactPanel />
   }
 }

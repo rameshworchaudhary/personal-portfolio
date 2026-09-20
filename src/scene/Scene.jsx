@@ -12,7 +12,7 @@ import {
   projectMatches,
 } from '../data'
 import { SPACING, roomZ, makeTexture, wrapText, fitFont, damp } from './utils'
-import { CosmicSpace, SciFiDoor, InfinityDoor, InfinityHyperspaceTunnel } from './CosmosAndDoors'
+import Space from './Space'
 
 /* ------------------------------------------------------------------ */
 /* Per-room camera framing. dist = camera distance from the room centre */
@@ -24,86 +24,65 @@ const CAM = [
   { dist: 17, h: 4.6, lookY: 2.2 }, // education
   { dist: 22, h: 3.8, lookY: 3.4 }, // theater
   { dist: 15, h: 3.0, lookY: 3.4 }, // contact
+  { dist: 20, h: 4.2, lookY: 3.6 }, // infinity
 ]
 
 /* ------------------------------ Camera ------------------------------ */
-function CameraRig({
-  room,
-  compact,
-  enabled,
-  reduced,
-  infinityMode,
-  infinityType = 'tour',
-  warpSpeed = 34,
-}) {
-  const { camera, size, pointer, clock } = useThree()
+// Door stations: the camera stops in front of a closed door between two rooms.
+const DOOR_CAM = { dist: 12.5, h: 3.8, lookY: 3.9 }
+const doorZ = (i) => -(i + 0.5) * SPACING
+
+function CameraRig({ room, atDoor, compact, enabled, reduced }) {
+  const { camera, size, pointer } = useThree()
   const look = useRef(new THREE.Vector3(0, 3, 30))
   const roll = useRef(0)
-  const infZ = useRef(-180)
 
   useFrame((_, dt) => {
     if (!enabled) return
     dt = Math.min(dt, 0.05)
-
-    if (infinityMode && infinityType === 'warp') {
-      // Continuous forward flight into deep space!
-      infZ.current -= warpSpeed * dt
-      camera.position.z = infZ.current
-      camera.position.x = damp(camera.position.x, pointer.x * 5, 2.5, dt)
-      camera.position.y = damp(camera.position.y, 4 + pointer.y * 3.5, 2.5, dt)
-
-      look.current.x = damp(look.current.x, pointer.x * 12, 2.5, dt)
-      look.current.y = damp(look.current.y, 4 + pointer.y * 8, 2.5, dt)
-      look.current.z = infZ.current - 45
-      camera.lookAt(look.current)
-
-      roll.current = damp(roll.current, -pointer.x * 0.1, 3, dt)
-      camera.rotateZ(roll.current)
-
-      const fov = 72
-      if (Math.abs(camera.fov - fov) > 0.01) {
-        camera.fov = damp(camera.fov, fov, 3, dt)
-        camera.updateProjectionMatrix()
-      }
-      return
-    }
-
-    // Normal or Infinity Tour Mode framing
-    infZ.current = -180
-    const cfg = CAM[room] || CAM[0]
-    const z = roomZ(room)
+    const cfg = atDoor ? DOOR_CAM : (CAM[room] || CAM[0])
+    const focusZ = atDoor ? doorZ(room) : roomZ(room)
     const aspect = size.width / size.height
-    // Portrait screens are narrow: pull the camera back so the centerpiece fits.
-    const dist = cfg.dist * (compact ? Math.min(1.5, Math.max(1, 0.62 / aspect)) : 1)
-    const tz = z + dist
 
-    // Shift the centerpiece away from the text panel.
+    // Portrait screens are narrow: pull the camera back so the centerpiece fits.
+    let dist = cfg.dist
+    if (atDoor) dist = compact ? 15 : cfg.dist
+    else if (compact) dist *= Math.min(1.5, Math.max(1, 0.62 / aspect))
+    const tz = focusZ + dist
+
+    // Shift the centerpiece away from the text panel (the panel is hidden at doors).
     let lx = 0
     let ly = cfg.lookY
-    if (compact) ly -= 0.25 * dist
-    else lx = -0.187 * aspect * dist
+    if (!atDoor) {
+      if (compact) ly -= 0.25 * dist
+      else lx = -0.187 * aspect * dist
+    }
 
     const par = reduced ? 0 : 1
-    // Subtle cinematic hover during infinity tour mode
-    const tourSwayX = infinityMode ? Math.sin(clock.elapsedTime * 0.6) * 0.8 : 0
-    const tourSwayY = infinityMode ? Math.cos(clock.elapsedTime * 0.5) * 0.4 : 0
-    const px = (pointer.x * 0.7 + tourSwayX) * par
-    const py = (pointer.y * 0.3 + tourSwayY) * par
+    const px = pointer.x * 0.7 * par
+    const py = pointer.y * 0.3 * par
 
     const travel = Math.abs(tz - camera.position.z)
+
+    // When flying past a room centre, rise above it instead of clipping through it.
+    const n = Math.max(0, Math.min(ROOMS.length - 1, Math.round(-camera.position.z / SPACING)))
+    const dz = camera.position.z - roomZ(n)
+    const lift = reduced ? 0 : 9 * Math.exp(-(dz * dz) / 50) * Math.min(Math.max((travel - 1) / 5, 0), 1)
+
     camera.position.x = damp(camera.position.x, px, 2.5, dt)
-    camera.position.y = damp(camera.position.y, cfg.h + py, 2.5, dt)
-    camera.position.z = damp(camera.position.z, tz, reduced ? 6 : (infinityMode ? 1.9 : 2.2), dt)
+    camera.position.y = damp(camera.position.y, cfg.h + py + lift, 4, dt)
+    camera.position.z = damp(camera.position.z, tz, reduced ? 6 : 2.2, dt)
 
     look.current.x = damp(look.current.x, lx, 3, dt)
     look.current.y = damp(look.current.y, ly, 3, dt)
-    look.current.z = damp(look.current.z, z - 2, 3, dt)
+    look.current.z = damp(look.current.z, atDoor ? focusZ : focusZ - 2, 3, dt)
     camera.lookAt(look.current)
     roll.current = damp(roll.current, -pointer.x * 0.035 * par, 3, dt)
     camera.rotateZ(roll.current)
 
-    // Small FOV push while travelling between rooms.
-    const fov = (infinityMode ? 60 : 55) + (reduced ? 0 : Math.min(travel * 0.16, 9))
+    // Wider lens for the door view on narrow phones, plus a small push while travelling.
+    const baseFov = atDoor && compact ? 80 : 55
+    const fov = baseFov + (reduced ? 0 : Math.min(travel * 0.16, 9))
     if (Math.abs(camera.fov - fov) > 0.01) {
       camera.fov = damp(camera.fov, fov, 4, dt)
       camera.updateProjectionMatrix()
@@ -113,20 +92,19 @@ function CameraRig({
 }
 
 /* --------------------------- Warp streaks --------------------------- */
-// Light streaks that appear while the camera is flying between rooms or in infinity flight.
-function WarpStreaks({ reduced, infinityMode }) {
+function WarpStreaks({ reduced }) {
   const group = useRef()
   const mat = useRef()
   const prev = useRef(null)
   const speed = useRef(0)
   const pos = useMemo(() => {
-    const n = 320
+    const n = 260
     const a = new Float32Array(n * 6)
     for (let i = 0; i < n; i++) {
-      const x = (Math.random() - 0.5) * 54
-      const y = Math.random() * 20
-      const z = 15 - Math.random() * 90
-      a.set([x, y, z, x, y, z - 1.2], i * 6)
+      const x = (Math.random() - 0.5) * 44
+      const y = Math.random() * 16
+      const z = 10 - Math.random() * 70
+      a.set([x, y, z, x, y, z - 0.6], i * 6)
     }
     return a
   }, [])
@@ -137,10 +115,8 @@ function WarpStreaks({ reduced, infinityMode }) {
     prev.current = camera.position.z
     speed.current = damp(speed.current, v, 8, dt)
     group.current.position.z = camera.position.z
-    group.current.scale.z = infinityMode ? 3.5 : 1 + speed.current * 0.09
-
-    const baseOpacity = infinityMode ? 0.85 : Math.min(Math.max((speed.current - 6) / 45, 0), 0.75)
-    mat.current.opacity = reduced ? 0 : baseOpacity
+    group.current.scale.z = 1 + speed.current * 0.09
+    mat.current.opacity = reduced ? 0 : Math.min(Math.max((speed.current - 6) / 45, 0), 0.75)
   })
   return (
     <group ref={group}>
@@ -150,7 +126,7 @@ function WarpStreaks({ reduced, infinityMode }) {
         </bufferGeometry>
         <lineBasicMaterial
           ref={mat}
-          color={infinityMode ? '#00f076' : '#ffb066'}
+          color="#ffb066"
           transparent
           opacity={0}
           depthWrite={false}
@@ -162,11 +138,12 @@ function WarpStreaks({ reduced, infinityMode }) {
 }
 
 /* ------------------------------ Lights ------------------------------ */
-function Lights({ room }) {
+function Lights({ colorIndex }) {
   const light = useRef()
   const target = useMemo(() => new THREE.Color(), [])
+  const safeIndex = Math.max(0, Math.min(ROOMS.length - 1, colorIndex))
   useFrame(({ camera }, dt) => {
-    target.set(ROOMS[room].color)
+    target.set(ROOMS[safeIndex].color)
     light.current.color.lerp(target, 1 - Math.exp(-Math.min(dt, 0.05) * 3))
     light.current.position.set(camera.position.x, camera.position.y + 2.5, camera.position.z - 7)
   })
@@ -178,69 +155,315 @@ function Lights({ room }) {
   )
 }
 
-/* --------------------------- Environment ---------------------------- */
-function Environment({
-  tier,
-  room,
-  onOpenDoor,
-  openingDoorIndex = null,
-  infinityMode,
-  infinityType = 'tour',
-  onEnterInfinity,
-  reduced,
-}) {
-  return (
-    <>
-      {/* Real 3D Deep Space with Planets (Chronos, Gaia, Ares, Elysium), Nebulae & Starfield */}
-      <CosmicSpace tier={tier} />
+/* ------------------------------- Doors ------------------------------ */
+const DOOR_W = 9
+const DOOR_H = 8.2
+const GAP = 0.3
+const LEAF = DOOR_W / 2
 
-      {/* Cyber Platform Flooring along the sector route */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -SPACING * 2.8]}>
-        <planeGeometry args={[14, 340]} />
-        <meshStandardMaterial color="#080c14" metalness={0.8} roughness={0.35} />
-      </mesh>
-      {/* Glowing boundary guide rails */}
-      {[-7, 7].map((x) => (
-        <mesh key={x} position={[x, 0.06, -SPACING * 2.8]}>
-          <boxGeometry args={[0.35, 0.12, 340]} />
-          <meshBasicMaterial color="#ff8400" transparent opacity={0.65} />
+function wrapLines(ctx, text, maxW) {
+  const words = text.split(' ')
+  const lines = []
+  let line = ''
+  words.forEach((w) => {
+    const t = line ? `${line} ${w}` : w
+    if (ctx.measureText(t).width > maxW && line) {
+      lines.push(line)
+      line = w
+    } else line = t
+  })
+  lines.push(line)
+  return lines
+}
+
+// Lemniscate infinity curve trace
+function drawInfinity(ctx, cx, cy, a, color) {
+  const trace = () => {
+    ctx.beginPath()
+    for (let i = 0; i <= 260; i++) {
+      const t = (i / 260) * Math.PI * 2
+      const d = 1 + Math.sin(t) ** 2
+      const x = cx + (a * Math.cos(t)) / d
+      const y = cy + ((a * Math.sin(t) * Math.cos(t)) / d) * 1.15
+      if (i) ctx.lineTo(x, y)
+      else ctx.moveTo(x, y)
+    }
+    ctx.closePath()
+  }
+  ctx.save()
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = color
+  ctx.shadowColor = color
+  ctx.shadowBlur = 34
+  ctx.lineWidth = 18
+  trace()
+  ctx.stroke()
+  ctx.shadowBlur = 0
+  ctx.strokeStyle = '#ffffff'
+  ctx.globalAlpha = 0.95
+  ctx.lineWidth = 6
+  trace()
+  ctx.stroke()
+  ctx.restore()
+}
+
+// One texture for the whole door. Each leaf shows half, so the symbol and name split when it opens.
+function drawDoor(ctx, w, h, title, num, color, isInfinity = false) {
+  const g = ctx.createLinearGradient(0, 0, 0, h)
+  if (isInfinity) {
+    g.addColorStop(0, '#100a26')
+    g.addColorStop(0.5, '#071829')
+    g.addColorStop(1, '#05070f')
+  } else {
+    g.addColorStop(0, '#1b2030')
+    g.addColorStop(1, '#0b0d14')
+  }
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, w, h)
+
+  ctx.strokeStyle = color
+  ctx.globalAlpha = 0.85
+  ctx.lineWidth = 6
+  ctx.strokeRect(30, 30, w / 2 - 46, h - 60)
+  ctx.strokeRect(w / 2 + 16, 30, w / 2 - 46, h - 60)
+  ctx.globalAlpha = 1
+  ctx.fillStyle = 'rgba(0,0,0,0.65)'
+  ctx.fillRect(w / 2 - 3, 0, 6, h)
+
+  // Prominent Glowing Infinity Symbol on the top half
+  drawInfinity(ctx, w / 2, h * (isInfinity ? 0.24 : 0.19), isInfinity ? 260 : 215, color)
+
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = color
+  ctx.font = '600 36px "JetBrains Mono", monospace'
+  const roomLabel = isInfinity ? 'GATEWAY // ANANTA DWAR' : `Room ${String(num).padStart(2, '0')}`
+  ctx.fillText(roomLabel, w / 2, h * (isInfinity ? 0.42 : 0.35))
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = isInfinity ? '900 112px Outfit, sans-serif' : '800 108px Outfit, sans-serif'
+  const displayTitle = isInfinity ? 'THE INFINITY DOOR' : title
+  const lines = wrapLines(ctx, displayTitle, w - 230)
+  lines.forEach((ln, i) => ctx.fillText(ln, w / 2, h * 0.55 + (i - (lines.length - 1) / 2) * 122))
+
+  ctx.fillStyle = isInfinity ? '#00f0ff' : '#8b92a5'
+  ctx.font = '500 38px "Plus Jakarta Sans", sans-serif'
+  ctx.fillText(isInfinity ? 'Click to open / close [∞]' : 'Click door to open / close', w / 2, h * 0.83)
+}
+
+const halfTexture = (base, offset) => {
+  const t = base.clone()
+  t.repeat.set(0.5, 1)
+  t.offset.set(offset, 0)
+  t.needsUpdate = true
+  return t
+}
+
+function Door({ index, open, ahead, onToggle }) {
+  const target = ROOMS[index + 1]
+  const isInfinityDoor = index === 5 // The door leading to Room 6 (Infinity)
+  const left = useRef()
+  const right = useRef()
+  const strip = useRef()
+  const spill = useRef()
+  const knobs = useRef()
+  const ang = useRef(0)
+  const doorColor = isInfinityDoor ? '#00f0ff' : target.color
+  const frameColor = useMemo(() => new THREE.Color(doorColor).multiplyScalar(0.7), [doorColor])
+
+  const base = useMemo(
+    () =>
+      makeTexture(1024, 932, (ctx, w, h) =>
+        drawDoor(ctx, w, h, target.title, index + 2, doorColor, isInfinityDoor),
+      ),
+    [target, index, doorColor, isInfinityDoor],
+  )
+  const [texL, texR] = useMemo(() => [halfTexture(base, 0), halfTexture(base, 0.5)], [base])
+  const spillTex = useMemo(
+    () =>
+      makeTexture(64, 256, (ctx, w, h) => {
+        const g = ctx.createLinearGradient(0, 0, 0, h)
+        g.addColorStop(0, 'rgba(255,255,255,0.95)')
+        g.addColorStop(1, 'rgba(255,255,255,0)')
+        ctx.fillStyle = g
+        ctx.fillRect(0, 0, w, h)
+      }),
+    [],
+  )
+
+  // Receding corridor frames
+  const tunnel = useMemo(() => {
+    const pos = []
+    const col = []
+    const c = new THREE.Color(doorColor)
+    const count = isInfinityDoor ? 12 : 7
+    for (let k = 1; k <= count; k++) {
+      const w = DOOR_W / 2 + 0.6 + k * 0.55
+      const h = DOOR_H + GAP + 0.6 + k * 0.45
+      const zz = k * 1.4
+      const f = Math.pow(1 - k / (count + 1), 1.4)
+      const seg = [[-w, 0, -w, h], [-w, h, w, h], [w, h, w, 0]]
+      seg.forEach(([x1, y1, x2, y2]) => {
+        pos.push(x1, y1, zz, x2, y2, zz)
+        col.push(c.r * f, c.g * f, c.b * f, c.r * f, c.g * f, c.b * f)
+      })
+    }
+    return { pos: new Float32Array(pos), col: new Float32Array(col) }
+  }, [doorColor, isInfinityDoor])
+
+  useFrame((s, dt) => {
+    dt = Math.min(dt, 0.05)
+    ang.current = damp(ang.current, open ? 1.75 : 0, 3.2, dt)
+    left.current.rotation.y = ang.current
+    right.current.rotation.y = -ang.current
+    const closed = 1 - ang.current / 1.75
+    const pulse = ahead ? 0.5 + Math.sin(s.clock.elapsedTime * 3) * 0.25 : 0.35
+    strip.current.material.opacity = (0.35 + pulse * 0.55) * closed
+    spill.current.material.opacity = (0.18 + pulse * 0.25) * closed
+    strip.current.visible = closed > 0.02
+    spill.current.visible = closed > 0.02
+    knobs.current.scale.setScalar(ahead ? 1 + Math.sin(s.clock.elapsedTime * 4) * 0.28 : 1)
+  })
+
+  const leaf = (side) => {
+    const sgn = side === 'L' ? 1 : -1
+    return (
+      <group ref={side === 'L' ? left : right} position={[-sgn * (DOOR_W / 2), 0, 0]}>
+        <group position={[sgn * (LEAF / 2), GAP + DOOR_H / 2, 0]}>
+          <mesh>
+            <boxGeometry args={[LEAF, DOOR_H, 0.24]} />
+            <meshStandardMaterial color="#141824" metalness={0.5} roughness={0.5} />
+          </mesh>
+          <mesh position={[0, 0, 0.125]}>
+            <planeGeometry args={[LEAF, DOOR_H]} />
+            <meshBasicMaterial map={side === 'L' ? texL : texR} />
+          </mesh>
+        </group>
+      </group>
+    )
+  }
+
+  return (
+    <group position={[0, 0, doorZ(index)]}>
+      {/* Frame */}
+      {[-1, 1].map((sgn) => (
+        <mesh key={sgn} position={[sgn * (DOOR_W / 2 + 0.3), (DOOR_H + GAP) / 2 + 0.3, 0]}>
+          <boxGeometry args={[0.45, DOOR_H + GAP + 0.6, 0.7]} />
+          <meshBasicMaterial color={frameColor} />
         </mesh>
       ))}
+      <mesh position={[0, DOOR_H + GAP + 0.3, 0]}>
+        <boxGeometry args={[DOOR_W + 1.2, 0.6, 0.7]} />
+        <meshBasicMaterial color={frameColor} />
+      </mesh>
 
-      {/* Interactive Sci-Fi Gateway Portals between Sectors (wide open architectural frames) */}
+      {/* Threshold leak light */}
+      <mesh ref={strip} position={[0, GAP / 2, -0.06]}>
+        <planeGeometry args={[DOOR_W, GAP]} />
+        <meshBasicMaterial color={doorColor} transparent blending={THREE.AdditiveBlending} depthWrite={false} />
+      </mesh>
+      <mesh ref={spill} position={[0, 0.03, 2.9]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[DOOR_W - 0.4, 5.8]} />
+        <meshBasicMaterial map={spillTex} color={doorColor} transparent blending={THREE.AdditiveBlending} depthWrite={false} />
+      </mesh>
+
+      {/* Door leaves */}
+      <group
+        onClick={(e) => {
+          e.stopPropagation()
+          if (ahead && onToggle) onToggle(index)
+        }}
+        onPointerOver={() => ahead && (document.body.style.cursor = 'pointer')}
+        onPointerOut={() => (document.body.style.cursor = '')}
+      >
+        {leaf('L')}
+        {leaf('R')}
+        <mesh position={[0, GAP + DOOR_H / 2, 0.3]}>
+          <planeGeometry args={[DOOR_W, DOOR_H]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+      </group>
+
+      {/* Knobs / Infinity beacons */}
+      <group ref={knobs}>
+        {[-0.5, 0.5].map((x) => (
+          <mesh key={x} position={[x, GAP + DOOR_H * 0.28, 0.3]}>
+            <sphereGeometry args={[isInfinityDoor ? 0.2 : 0.14, 16, 16]} />
+            <meshBasicMaterial color={doorColor} />
+          </mesh>
+        ))}
+      </group>
+
+      <lineSegments>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[tunnel.pos, 3]} />
+          <bufferAttribute attach="attributes-color" args={[tunnel.col, 3]} />
+        </bufferGeometry>
+        <lineBasicMaterial vertexColors transparent opacity={0.6} />
+      </lineSegments>
+    </group>
+  )
+}
+
+/* --------------------------- Environment ---------------------------- */
+function Runway() {
+  const RUN_LEN = 440 // Extends cleanly across all 7 rooms
+  const midZ = 45 - RUN_LEN / 2
+  const grid = useMemo(() => {
+    const t = makeTexture(64, 64, (ctx, w, h) => {
+      ctx.fillStyle = '#0b0d15'
+      ctx.fillRect(0, 0, w, h)
+      ctx.strokeStyle = 'rgba(255,90,60,0.22)'
+      ctx.lineWidth = 2
+      ctx.strokeRect(0, 0, w, h)
+    })
+    t.wrapS = t.wrapT = THREE.RepeatWrapping
+    t.repeat.set(13, RUN_LEN / 2)
+    return t
+  }, [RUN_LEN])
+
+  return (
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, midZ]}>
+        <planeGeometry args={[26, RUN_LEN]} />
+        <meshStandardMaterial map={grid} metalness={0.45} roughness={0.55} />
+      </mesh>
+      <mesh position={[0, -0.25, midZ]}>
+        <boxGeometry args={[26, 0.5, RUN_LEN]} />
+        <meshStandardMaterial color="#080a10" metalness={0.6} roughness={0.5} />
+      </mesh>
+      {[-13, 13].map((x) => (
+        <mesh key={x} position={[x, 0.07, midZ]}>
+          <boxGeometry args={[0.22, 0.14, RUN_LEN]} />
+          <meshBasicMaterial color="#ff5a3c" />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function Environment({ tier, reduced, room, atDoor, openDoors, onToggleDoor }) {
+  return (
+    <>
+      <Space tier={tier} reduced={reduced} />
+      <Runway />
       {ROOMS.slice(0, -1).map((r, i) => (
-        <SciFiDoor
+        <Door
           key={r.id}
-          doorIndex={i}
-          targetRoomIndex={i + 1}
-          currentRoom={room}
-          isOpen={true}
-          onOpen={onOpenDoor}
-          doorZ={-(i + 0.5) * SPACING}
-          title={ROOMS[i + 1].title}
-          color={ROOMS[i + 1].color}
-          reduced={reduced}
+          index={i}
+          open={!!(openDoors && openDoors[i])}
+          ahead={atDoor && room === i}
+          onToggle={onToggleDoor}
         />
       ))}
-
-      {/* The Infinity Hyperspace Portal after Sector 06 */}
-      <InfinityDoor
-        doorZ={-(5 + 0.55) * SPACING}
-        isOpen={true}
-        onEnterInfinity={onEnterInfinity}
-        reduced={reduced}
-      />
-
-      {/* Endless Hyperspace Tunnel */}
-      <InfinityHyperspaceTunnel active={infinityMode && infinityType === 'warp'} />
     </>
   )
 }
 
 /* ------------------------------- Home ------------------------------- */
 function HomeRoom({ z, tier, reduced }) {
-  const portraitUrl = (typeof window !== 'undefined' ? window.location.origin : '') + '/assets/portrait.png'
-  const tex = useLoader(THREE.TextureLoader, portraitUrl)
+  const tex = useLoader(THREE.TextureLoader, import.meta.env.BASE_URL + 'assets/portrait.png')
   useMemo(() => {
     tex.colorSpace = THREE.SRGBColorSpace
     tex.anisotropy = 8
@@ -282,20 +505,15 @@ function HomeRoom({ z, tier, reduced }) {
   useFrame((s, dt) => {
     const t = s.clock.elapsedTime
     const k = reduced ? 0.15 : 1
-    if (arc.current) arc.current.rotation.z += dt * 0.5 * k
-    if (scan.current) scan.current.position.y = 0.5 + ((t * 0.3 * k) % 1) * H
-    if (fig.current) fig.current.position.y = 0.4 + Math.sin(t * 0.9) * 0.06 * k
-    if (dust.current) dust.current.rotation.y += dt * 0.04 * k
-    // Hologram colour split with a short glitch every few seconds.
+    arc.current.rotation.z += dt * 0.5 * k
+    scan.current.position.y = 0.5 + ((t * 0.3 * k) % 1) * H
+    fig.current.position.y = 0.4 + Math.sin(t * 0.9) * 0.06 * k
+    dust.current.rotation.y += dt * 0.04 * k
     const glitch = !reduced && t % 4.2 < 0.18
-    if (g1.current) {
-      g1.current.position.x = glitch ? 0.09 + (Math.random() - 0.5) * 0.7 : 0.09 + Math.sin(t * 1.7) * 0.02 * k
-      g1.current.material.opacity = glitch ? 0.6 : 0.22
-    }
-    if (g2.current) {
-      g2.current.position.x = glitch ? -0.09 + (Math.random() - 0.5) * 0.7 : -0.09 - Math.sin(t * 1.7) * 0.02 * k
-      g2.current.material.opacity = glitch ? 0.45 : 0.16
-    }
+    g1.current.position.x = glitch ? 0.09 + (Math.random() - 0.5) * 0.7 : 0.09 + Math.sin(t * 1.7) * 0.02 * k
+    g2.current.position.x = glitch ? -0.09 + (Math.random() - 0.5) * 0.7 : -0.09 - Math.sin(t * 1.7) * 0.02 * k
+    g1.current.material.opacity = glitch ? 0.6 : 0.22
+    g2.current.material.opacity = glitch ? 0.45 : 0.16
   })
 
   return (
@@ -357,9 +575,9 @@ function SkillNode({ skill, pos, tex, show }) {
   const body = useRef()
   useFrame((_, dt) => {
     dt = Math.min(dt, 0.05)
-    if (m.current) m.current.opacity = damp(m.current.opacity, show ? 1 : 0.1, 6, dt)
-    if (sp.current) sp.current.opacity = damp(sp.current.opacity, show ? 1 : 0, 6, dt)
-    if (body.current) body.current.scale.setScalar(damp(body.current.scale.x, show ? 1 : 0.6, 6, dt))
+    m.current.opacity = damp(m.current.opacity, show ? 1 : 0.1, 6, dt)
+    sp.current.opacity = damp(sp.current.opacity, show ? 1 : 0, 6, dt)
+    body.current.scale.setScalar(damp(body.current.scale.x, show ? 1 : 0.6, 6, dt))
   })
   return (
     <group position={pos}>
@@ -377,7 +595,6 @@ function SkillNode({ skill, pos, tex, show }) {
 function Pulse({ pos, seed, show, reduced }) {
   const m = useRef()
   useFrame((st) => {
-    if (!m.current) return
     const p = (st.clock.elapsedTime * (reduced ? 0.1 : 0.45) + seed) % 1
     m.current.position.set(pos[0] * p, pos[1] * p, pos[2] * p)
     m.current.visible = show
@@ -434,16 +651,10 @@ function UniverseRoom({ z, filter, reduced, compact }) {
 
   useFrame((st, dt) => {
     const k = reduced ? 0.15 : 1
-    orbits.forEach((r, i) => {
-      if (r.current) r.current.rotation.y += dt * ORBIT_SPEED[i] * k
-    })
-    if (core.current) {
-      core.current.rotation.y += dt * 0.25 * k
-      core.current.rotation.x += dt * 0.12 * k
-    }
-    if (inner.current) {
-      inner.current.scale.setScalar(1 + Math.sin(st.clock.elapsedTime * 2) * 0.08 * k)
-    }
+    orbits.forEach((r, i) => (r.current.rotation.y += dt * ORBIT_SPEED[i] * k))
+    core.current.rotation.y += dt * 0.25 * k
+    core.current.rotation.x += dt * 0.12 * k
+    inner.current.scale.setScalar(1 + Math.sin(st.clock.elapsedTime * 2) * 0.08 * k)
   })
 
   const scale = compact ? 0.66 : 0.82
@@ -517,17 +728,11 @@ function Monolith({ x, item, active, onSelect }) {
 
   useFrame((_, dt) => {
     dt = Math.min(dt, 0.05)
-    if (g.current) {
-      g.current.position.z = damp(g.current.position.z, active ? 1.6 : 0, 4, dt)
-      g.current.position.y = damp(g.current.position.y, active ? 0.25 : 0, 4, dt)
-    }
-    if (face.current) {
-      const b = damp(face.current.color.r, active ? 1 : 0.32, 5, dt)
-      face.current.color.setScalar(b)
-    }
-    if (edge.current) {
-      edge.current.opacity = damp(edge.current.opacity, active ? 1 : 0.25, 5, dt)
-    }
+    g.current.position.z = damp(g.current.position.z, active ? 1.6 : 0, 4, dt)
+    g.current.position.y = damp(g.current.position.y, active ? 0.25 : 0, 4, dt)
+    const b = damp(face.current.color.r, active ? 1 : 0.32, 5, dt)
+    face.current.color.setScalar(b)
+    edge.current.opacity = damp(edge.current.opacity, active ? 1 : 0.25, 5, dt)
   })
 
   return (
@@ -617,8 +822,7 @@ function Step({ x, top, item, current }) {
 }
 
 function EducationRoom({ z, compact }) {
-  // Oldest step at the front-left, current degree at the back-right.
-  const steps = useMemo(() => [...EDUCATION].reverse(), [])
+  const steps = [...EDUCATION].reverse()
   return (
     <group position={[0, 0, z]} scale={compact ? 0.6 : 0.88}>
       {steps.map((item, i) => (
@@ -636,9 +840,7 @@ const rng = (seed) => {
   return () => (s = (s * 16807) % 2147483647) / 2147483647
 }
 
-// One small procedural illustration per project, drawn inside the screen.
 const ART = [
-  // PadhaiHub: stacked question cards
   (ctx, x, y, w, h, c) => {
     for (let i = 0; i < 3; i++) {
       const ox = x + 10 + i * 16
@@ -656,7 +858,6 @@ const ART = [
       ctx.fillRect(ox + 18, oy + 60, (w - 52) * 0.4, 6)
     }
   },
-  // NexShop: product grid and payment pills
   (ctx, x, y, w, h, c) => {
     const cw = (w - 40) / 3
     const ch = (h - 90) / 2
@@ -690,7 +891,6 @@ const ART = [
       ctx.fillText(t, px + 22, py + 9)
     })
   },
-  // Resume builder: document with a highlighted bullet
   (ctx, x, y, w, h, c) => {
     const dx = x + 40
     const dw = w - 80
@@ -709,7 +909,6 @@ const ART = [
       ctx.globalAlpha = 1
     }
   },
-  // Gesture game: hand landmarks
   (ctx, x, y, w, h, c) => {
     const cx = x + w / 2
     const cy = y + h * 0.66
@@ -743,7 +942,6 @@ const ART = [
     ctx.arc(cx, cy, 12, 0, 7)
     ctx.fill()
   },
-  // Voice assistant: waveform
   (ctx, x, y, w, h, c) => {
     const r = rng(7)
     const n = 26
@@ -757,7 +955,6 @@ const ART = [
     }
     ctx.globalAlpha = 1
   },
-  // House price: scatter and regression line
   (ctx, x, y, w, h, c) => {
     const r = rng(21)
     ctx.strokeStyle = 'rgba(255,255,255,0.2)'
@@ -783,7 +980,6 @@ const ART = [
     ctx.lineTo(x + w - 36, y + 50)
     ctx.stroke()
   },
-  // Heart disease: ECG trace
   (ctx, x, y, w, h, c) => {
     const mid = y + h / 2
     ctx.strokeStyle = 'rgba(255,255,255,0.08)'
@@ -817,7 +1013,6 @@ function drawScreen(ctx, w, h, p, i) {
   ctx.fillStyle = 'rgba(255,255,255,0.03)'
   for (let y = 0; y < h; y += 6) ctx.fillRect(0, y, w, 2)
 
-  // Status pill and counter
   ctx.textBaseline = 'top'
   ctx.textAlign = 'left'
   ctx.font = '600 26px "JetBrains Mono", monospace'
@@ -835,7 +1030,6 @@ function drawScreen(ctx, w, h, p, i) {
   ctx.fillText(`${String(i + 1).padStart(2, '0')} / ${String(PROJECTS.length).padStart(2, '0')}`, w - 56, 55)
   ctx.textAlign = 'left'
 
-  // Left column: kind, title, sub
   ctx.fillStyle = '#8b92a5'
   ctx.font = '500 26px "JetBrains Mono", monospace'
   ctx.fillText(p.kind, 56, 122)
@@ -846,7 +1040,6 @@ function drawScreen(ctx, w, h, p, i) {
   ctx.font = '500 29px "Plus Jakarta Sans", sans-serif'
   wrapText(ctx, p.sub, 56, ty + 14, 520, 40, 3)
 
-  // Right column: illustration
   const ax = 616
   const ay = 118
   const aw = 352
@@ -865,7 +1058,6 @@ function drawScreen(ctx, w, h, p, i) {
   ART[i % ART.length](ctx, ax, ay, aw, ah, c)
   ctx.restore()
 
-  // Tech tags
   ctx.font = '500 26px "JetBrains Mono", monospace'
   let x = 56
   const y = h - 96
@@ -892,8 +1084,8 @@ function Screen({ index, angle, radius, active, visible, onSelect }) {
   useFrame((_, dt) => {
     dt = Math.min(dt, 0.05)
     const b = active ? 1 : visible ? 0.45 : 0.12
-    if (face.current) face.current.color.setScalar(damp(face.current.color.r, b, 5, dt))
-    if (frame.current) frame.current.opacity = damp(frame.current.opacity, active ? 1 : visible ? 0.3 : 0.08, 5, dt)
+    face.current.color.setScalar(damp(face.current.color.r, b, 5, dt))
+    frame.current.opacity = damp(frame.current.opacity, active ? 1 : visible ? 0.3 : 0.08, 5, dt)
   })
 
   return (
@@ -932,18 +1124,13 @@ function TheaterRoom({ z, active, filter, onSelect, reduced }) {
   useFrame((st, dt) => {
     dt = Math.min(dt, 0.05)
     const target = -(active / n) * Math.PI * 2
-    if (ring.current) {
-      const cur = ring.current.rotation.y
-      const delta = ((((target - cur + Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) - Math.PI
-      ring.current.rotation.y = cur + delta * (1 - Math.exp(-dt * (reduced ? 12 : 4.5)))
-      ring.current.position.y = 4.4 + (reduced ? 0 : Math.sin(st.clock.elapsedTime * 0.8) * 0.08)
-    }
-    // The projector beam flickers gently and follows the active status colour.
-    if (beam.current) {
-      const done = PROJECTS[active].status === 'Completed'
-      beam.current.material.color.set(done ? '#00f076' : '#ff8400')
-      beam.current.material.opacity = 0.06 + (reduced ? 0 : Math.sin(st.clock.elapsedTime * 3) * 0.012)
-    }
+    const cur = ring.current.rotation.y
+    const delta = ((((target - cur + Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) - Math.PI
+    ring.current.rotation.y = cur + delta * (1 - Math.exp(-dt * (reduced ? 12 : 4.5)))
+    ring.current.position.y = 4.4 + (reduced ? 0 : Math.sin(st.clock.elapsedTime * 0.8) * 0.08)
+    const done = PROJECTS[active].status === 'Completed'
+    beam.current.material.color.set(done ? '#00f076' : '#ff8400')
+    beam.current.material.opacity = 0.06 + (reduced ? 0 : Math.sin(st.clock.elapsedTime * 3) * 0.012)
   })
 
   return (
@@ -999,7 +1186,6 @@ function Badge({ item, angle, radius, lift, hover }) {
   )
   const target = useRef(1)
   useFrame((_, dt) => {
-    if (!sp.current) return
     const s = damp(sp.current.scale.y, target.current, 8, Math.min(dt, 0.05))
     sp.current.scale.set(s * 3.8, s * 0.95, 1)
   })
@@ -1040,14 +1226,12 @@ function ContactRoom({ z, reduced, compact }) {
   useFrame((s, dt) => {
     const t = s.clock.elapsedTime * (reduced ? 0.3 : 1)
     rings.forEach((r, i) => {
-      if (r.current) {
-        const p = (t * 0.22 + i / rings.length) % 1
-        r.current.scale.setScalar(1 + p * 11)
-        r.current.material.opacity = (1 - p) * 0.8
-      }
+      const p = (t * 0.22 + i / rings.length) % 1
+      r.current.scale.setScalar(1 + p * 11)
+      r.current.material.opacity = (1 - p) * 0.8
     })
-    if (orb.current) orb.current.scale.setScalar(1 + Math.sin(t * 3) * 0.1)
-    if (!hover.current && orbit.current) orbit.current.rotation.y += Math.min(dt, 0.05) * 0.22 * (reduced ? 0.2 : 1)
+    orb.current.scale.setScalar(1 + Math.sin(t * 3) * 0.1)
+    if (!hover.current) orbit.current.rotation.y += Math.min(dt, 0.05) * 0.22 * (reduced ? 0.2 : 1)
   })
   return (
     <group position={[0, 0, z]} scale={compact ? 0.7 : 1}>
@@ -1074,10 +1258,160 @@ function ContactRoom({ z, reduced, compact }) {
   )
 }
 
+/* -------------------------- Infinity Portal -------------------------- */
+function InfinityRoom({ z, reduced, compact }) {
+  const lemniscateRef = useRef()
+  const coreRef = useRef()
+  const vortexRef = useRef()
+  const particlesRef = useRef()
+
+  // 3D Parametric Lemniscate of Bernoulli Curve (∞)
+  const { linePos, lineCol } = useMemo(() => {
+    const N = 360
+    const pos = new Float32Array(N * 3)
+    const col = new Float32Array(N * 3)
+    const a = 5.2
+    const c1 = new THREE.Color('#00f0ff')
+    const c2 = new THREE.Color('#ff007f')
+
+    for (let i = 0; i < N; i++) {
+      const t = (i / N) * Math.PI * 2
+      const d = 1 + Math.sin(t) ** 2
+      const x = (a * Math.cos(t)) / d
+      const y = ((a * Math.sin(t) * Math.cos(t)) / d) * 1.5
+      const z = Math.sin(t * 2) * 0.85
+      pos[i * 3] = x
+      pos[i * 3 + 1] = y
+      pos[i * 3 + 2] = z
+
+      const blend = (Math.sin(t) + 1) * 0.5
+      const c = c1.clone().lerp(c2, blend)
+      col[i * 3] = c.r
+      col[i * 3 + 1] = c.g
+      col[i * 3 + 2] = c.b
+    }
+    return { linePos: pos, lineCol: col }
+  }, [])
+
+  // Floating vortex particles
+  const { partPos, partCol } = useMemo(() => {
+    const P_COUNT = 480
+    const pos = new Float32Array(P_COUNT * 3)
+    const col = new Float32Array(P_COUNT * 3)
+    const cCyan = new THREE.Color('#00f0ff')
+    const cGold = new THREE.Color('#ffc83b')
+    const cPink = new THREE.Color('#ff007f')
+
+    for (let i = 0; i < P_COUNT; i++) {
+      const r = 2.2 + Math.random() * 8.5
+      const theta = Math.random() * Math.PI * 2
+      const height = (Math.random() - 0.5) * 6
+      pos[i * 3] = Math.cos(theta) * r
+      pos[i * 3 + 1] = height
+      pos[i * 3 + 2] = Math.sin(theta) * r
+
+      const pick = Math.random()
+      const c = pick < 0.45 ? cCyan : pick < 0.75 ? cPink : cGold
+      col[i * 3] = c.r
+      col[i * 3 + 1] = c.g
+      col[i * 3 + 2] = c.b
+    }
+    return { partPos: pos, partCol: col }
+  }, [])
+
+  useFrame((st, dt) => {
+    dt = Math.min(dt, 0.05)
+    const t = st.clock.elapsedTime * (reduced ? 0.2 : 0.8)
+
+    if (lemniscateRef.current) {
+      lemniscateRef.current.rotation.y = t * 0.35
+      lemniscateRef.current.rotation.z = Math.sin(t * 0.5) * 0.18
+      lemniscateRef.current.position.y = 4.2 + Math.sin(t * 0.7) * 0.2
+    }
+
+    if (coreRef.current) {
+      coreRef.current.rotation.x = t * 0.6
+      coreRef.current.rotation.y = t * 0.8
+      const s = 1 + Math.sin(t * 3.5) * 0.12
+      coreRef.current.scale.set(s, s, s)
+    }
+
+    if (vortexRef.current) {
+      vortexRef.current.rotation.z += dt * 0.6
+    }
+
+    if (particlesRef.current) {
+      particlesRef.current.rotation.y += dt * 0.25
+    }
+  })
+
+  return (
+    <group position={[0, 0, z]} scale={compact ? 0.72 : 1}>
+      {/* Ground portal rings */}
+      {[5, 7.5, 10.5].map((r, i) => (
+        <mesh key={i} position={[0, 0.05 + i * 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[r - 0.12, r + 0.12, 96]} />
+          <meshBasicMaterial color={i % 2 === 0 ? '#00f0ff' : '#ff007f'} transparent opacity={0.6 - i * 0.12} side={THREE.DoubleSide} depthWrite={false} />
+        </mesh>
+      ))}
+
+      {/* Swirling Hyperspace Core - Interactive Portal to warp back to Room 1 */}
+      <group
+        position={[0, 4.2, 0]}
+        onClick={(e) => {
+          e.stopPropagation()
+          if (onWarpHome) onWarpHome()
+        }}
+        onPointerOver={() => {
+          document.body.style.cursor = 'pointer'
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = ''
+        }}
+      >
+        <mesh ref={coreRef}>
+          <octahedronGeometry args={[1.3, 2]} />
+          <meshBasicMaterial color="#00f0ff" wireframe transparent opacity={0.85} />
+        </mesh>
+
+        <mesh>
+          <sphereGeometry args={[0.55, 32, 32]} />
+          <meshBasicMaterial color="#ffffff" />
+        </mesh>
+
+        {/* Accretion disc */}
+        <mesh ref={vortexRef} rotation={[0.4, 0, 0]}>
+          <torusGeometry args={[3.2, 0.05, 16, 120]} />
+          <meshBasicMaterial color="#ff007f" transparent opacity={0.75} />
+        </mesh>
+      </group>
+
+      {/* Rotating 3D Lemniscate ∞ symbol */}
+      <group ref={lemniscateRef} position={[0, 4.2, 0]}>
+        <lineLoop>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" args={[linePos, 3]} />
+            <bufferAttribute attach="attributes-color" args={[lineCol, 3]} />
+          </bufferGeometry>
+          <lineBasicMaterial vertexColors linewidth={3} transparent opacity={0.9} blending={THREE.AdditiveBlending} />
+        </lineLoop>
+      </group>
+
+      {/* Orbiting stardust cloud */}
+      <points ref={particlesRef} position={[0, 4.2, 0]}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[partPos, 3]} />
+          <bufferAttribute attach="attributes-color" args={[partCol, 3]} />
+        </bufferGeometry>
+        <pointsMaterial size={0.09} vertexColors transparent opacity={0.75} depthWrite={false} sizeAttenuation />
+      </points>
+    </group>
+  )
+}
+
 /* ------------------------------- Ready ------------------------------ */
 function Ready({ onReady }) {
   useEffect(() => {
-    // Wait two frames so the first render (and texture upload) has happened.
     let id = requestAnimationFrame(() => (id = requestAnimationFrame(onReady)))
     return () => cancelAnimationFrame(id)
   }, [onReady])
@@ -1087,6 +1421,10 @@ function Ready({ onReady }) {
 /* -------------------------------- Root ------------------------------ */
 export default function Scene({
   room,
+  atDoor,
+  openDoors,
+  onToggleDoor,
+  onWarpHome,
   tier,
   compact,
   reduced,
@@ -1098,50 +1436,35 @@ export default function Scene({
   projIndex,
   setProjIndex,
   projFilter,
-  onOpenDoor,
-  openingDoorIndex = null,
-  infinityMode = false,
-  infinityType = 'tour',
-  onEnterInfinity,
-  warpSpeed = 34,
 }) {
   return (
     <Canvas
       flat
       dpr={tier.dpr}
       gl={{ antialias: tier.antialias, powerPreference: 'high-performance' }}
-      camera={{ fov: 55, near: 0.1, far: 850, position: [0, 3, 42] }}
+      camera={{ fov: 55, near: 0.1, far: 1400, position: [0, 3, 42] }}
       aria-hidden="true"
     >
-      <color attach="background" args={['#03050a']} />
-      <fog attach="fog" args={['#03050a', 140, 750]} />
-      <Lights room={room} />
+      <color attach="background" args={['#02030a']} />
+      <fog attach="fog" args={['#02030a', 15, 52]} />
+      <Lights colorIndex={atDoor ? room + 1 : room} />
       <Environment
         tier={tier}
-        room={room}
-        onOpenDoor={onOpenDoor}
-        openingDoorIndex={openingDoorIndex}
-        infinityMode={infinityMode}
-        infinityType={infinityType}
-        onEnterInfinity={onEnterInfinity}
         reduced={reduced}
-      />
-      <WarpStreaks reduced={reduced} infinityMode={infinityMode} />
-      <CameraRig
         room={room}
-        compact={compact}
-        enabled={ready}
-        reduced={reduced}
-        infinityMode={infinityMode}
-        infinityType={infinityType}
-        warpSpeed={warpSpeed}
+        atDoor={atDoor}
+        openDoors={openDoors}
+        onToggleDoor={onToggleDoor}
       />
+      <WarpStreaks reduced={reduced} />
+      <CameraRig room={room} atDoor={atDoor} compact={compact} enabled={ready} reduced={reduced} />
       <HomeRoom z={roomZ(0)} tier={tier} reduced={reduced} />
       <UniverseRoom z={roomZ(1)} filter={skillFilter} reduced={reduced} compact={compact} />
       <ExperienceRoom z={roomZ(2)} active={expIndex} onSelect={setExpIndex} compact={compact} />
       <EducationRoom z={roomZ(3)} compact={compact} />
       <TheaterRoom z={roomZ(4)} active={projIndex} filter={projFilter} onSelect={setProjIndex} reduced={reduced} />
       <ContactRoom z={roomZ(5)} reduced={reduced} compact={compact} />
+      <InfinityRoom z={roomZ(6)} reduced={reduced} compact={compact} onWarpHome={onWarpHome} />
       <Ready onReady={onReady} />
     </Canvas>
   )

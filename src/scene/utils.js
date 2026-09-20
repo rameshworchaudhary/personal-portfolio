@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-export const SPACING = 36 // distance between room centres along -z
+export const SPACING = 44 // distance between room centres along -z
 export const roomZ = (i) => -i * SPACING
 
 export function hasWebGL() {
@@ -23,7 +23,8 @@ export function getTier() {
     low,
     dpr: low ? [1, 1.25] : [1, 1.75],
     antialias: !low,
-    stars: low ? 350 : 900,
+    stars: low ? 1300 : 3200,
+    bright: low ? 120 : 280,
     dust: low ? 140 : 380,
   }
 }
@@ -131,4 +132,132 @@ export function playDoorOpenSound() {
   } catch {
     // Gracefully handle browser restrictions
   }
+}
+
+// Synthesized cybernetic door closing audio effect (pneumatic seal + magnetic lock latch)
+export function playDoorCloseSound() {
+  if (typeof window === 'undefined') return
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext
+    if (!AudioCtx) return
+    const ctx = new AudioCtx()
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {})
+    }
+    const now = ctx.currentTime
+
+    // 1. Hydraulic pneumatic sealing sweep
+    const bufferSize = Math.floor(ctx.sampleRate * 0.55)
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1
+    }
+    const noise = ctx.createBufferSource()
+    noise.buffer = buffer
+
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(1100, now)
+    filter.frequency.exponentialRampToValueAtTime(140, now + 0.5)
+
+    const noiseGain = ctx.createGain()
+    noiseGain.gain.setValueAtTime(0.16, now)
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.52)
+
+    noise.connect(filter)
+    filter.connect(noiseGain)
+    noiseGain.connect(ctx.destination)
+    noise.start(now)
+    noise.stop(now + 0.55)
+
+    // 2. Heavy magnetic airlock clamp latch thud
+    const subOsc = ctx.createOscillator()
+    const subGain = ctx.createGain()
+    subOsc.type = 'triangle'
+    subOsc.frequency.setValueAtTime(120, now + 0.35)
+    subOsc.frequency.exponentialRampToValueAtTime(45, now + 0.55)
+    subGain.gain.setValueAtTime(0.001, now + 0.35)
+    subGain.gain.linearRampToValueAtTime(0.25, now + 0.38)
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.58)
+    subOsc.connect(subGain)
+    subGain.connect(ctx.destination)
+    subOsc.start(now + 0.35)
+    subOsc.stop(now + 0.6)
+
+    // 3. Security lock tone
+    const toneOsc = ctx.createOscillator()
+    const toneGain = ctx.createGain()
+    toneOsc.type = 'sine'
+    toneOsc.frequency.setValueAtTime(659.25, now)
+    toneOsc.frequency.setValueAtTime(440, now + 0.1)
+    toneGain.gain.setValueAtTime(0.12, now)
+    toneGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3)
+    toneOsc.connect(toneGain)
+    toneGain.connect(ctx.destination)
+    toneOsc.start(now)
+    toneOsc.stop(now + 0.32)
+  } catch {}
+}
+
+// Synthesized cosmic hyperspace warp sound for looping from Infinity back to Room 1
+export function playInfinityWarpSound() {
+  if (typeof window === 'undefined') return
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext
+    if (!AudioCtx) return
+    const ctx = new AudioCtx()
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {})
+    }
+    const now = ctx.currentTime
+
+    // 1. Cosmic ethereal harmonic chord
+    const freqs = [261.63, 392.0, 523.25, 783.99, 1046.5]
+    freqs.forEach((f, idx) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(f, now)
+      osc.frequency.exponentialRampToValueAtTime(f * 1.5, now + 0.6)
+      osc.frequency.exponentialRampToValueAtTime(f * 0.75, now + 1.2)
+
+      gain.gain.setValueAtTime(0.001, now)
+      gain.gain.linearRampToValueAtTime(0.06 / (idx + 1), now + 0.2 + idx * 0.05)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.3)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(now)
+      osc.stop(now + 1.35)
+    })
+
+    // 2. Hyperspace whoosh
+    const bufferSize = Math.floor(ctx.sampleRate * 1.1)
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1
+    }
+    const noise = ctx.createBufferSource()
+    noise.buffer = buffer
+
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'bandpass'
+    filter.Q.value = 3.5
+    filter.frequency.setValueAtTime(300, now)
+    filter.frequency.exponentialRampToValueAtTime(3200, now + 0.5)
+    filter.frequency.exponentialRampToValueAtTime(400, now + 1.1)
+
+    const noiseGain = ctx.createGain()
+    noiseGain.gain.setValueAtTime(0.001, now)
+    noiseGain.gain.linearRampToValueAtTime(0.22, now + 0.4)
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 1.1)
+
+    noise.connect(filter)
+    filter.connect(noiseGain)
+    noiseGain.connect(ctx.destination)
+    noise.start(now)
+    noise.stop(now + 1.15)
+  } catch {}
 }

@@ -1,7 +1,7 @@
 import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PROFILE, ROOMS, stepProject, visibleProjects } from './data'
 import RoomPanel from './ui/Panels'
-import { getTier, hasWebGL, prefersReducedMotion, playDoorOpenSound } from './scene/utils'
+import { getTier, hasWebGL, prefersReducedMotion, playDoorOpenSound, playDoorCloseSound, playInfinityWarpSound } from './scene/utils'
 import CinematicIntro from './js/cinematic-intro.js'
 
 const Scene = lazy(() => import('./scene/Scene'))
@@ -54,7 +54,18 @@ export default function App() {
   const tier = useMemo(getTier, [])
   const reduced = useMemo(prefersReducedMotion, [])
 
-  const [room, setRoom] = useState(roomFromHash)
+  // stop = 2 * room while standing in a room, 2 * room + 1 while standing at the door after it.
+  const [stop, setStop] = useState(() => roomFromHash() * 2)
+  // Individual open/closed state for the 6 doors between rooms
+  const [openDoors, setOpenDoors] = useState(() => {
+    const cur = roomFromHash()
+    const doors = [false, false, false, false, false, false]
+    for (let i = 0; i < cur; i++) doors[i] = true
+    return doors
+  })
+  const [warping, setWarping] = useState(false)
+  const [warpToast, setWarpToast] = useState(false)
+
   const [filter, setFilter] = useState('all')
   const [expIndex, setExpIndex] = useState(0)
   const [projIndex, setProjIndex] = useState(0)
@@ -62,27 +73,11 @@ export default function App() {
   const [ready, setReady] = useState(!webgl)
   const [fontsOk, setFontsOk] = useState(!webgl)
   const [compact, setCompact] = useState(() => window.innerWidth < 900)
-  const [moved, setMoved] = useState(false)
   const [failed, setFailed] = useState(false)
-  const [infinityMode, setInfinityMode] = useState(false)
-  const [loopMode, setLoopMode] = useState('tour') // 'tour' (Infinite Portfolio Loop) | 'warp' (Endless Deep Space Flight)
-  const [loopPlaying, setLoopPlaying] = useState(true)
-  const [loopSpeed, setLoopSpeed] = useState(1) // 1x, 2x, 3x
-  const [loopCycle, setLoopCycle] = useState(1)
-  const [showPanelInLoop, setShowPanelInLoop] = useState(false)
-  const [warpSpeed, setWarpSpeed] = useState(36)
   const filterRef = useRef('all')
-  const [openingDoorIndex, setOpeningDoorIndex] = useState(null)
-  const openingTimeoutRef = useRef(null)
-  const closeTimeoutRef = useRef(null)
 
-  // Clear timers on unmount
-  useEffect(() => {
-    return () => {
-      if (openingTimeoutRef.current) clearTimeout(openingTimeoutRef.current)
-      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
-    }
-  }, [])
+  const room = Math.floor(stop / 2)
+  const atDoor = stop % 2 === 1
 
   // Changing the filter jumps to the first matching project if the current one is hidden.
   const setProjFilter = useCallback((f) => {
@@ -92,238 +87,248 @@ export default function App() {
 
   const onReady = useCallback(() => setReady(true), [])
 
-  const stepRoom = useCallback((i) => {
-    setRoom((r) => {
-      const n = typeof i === 'function' ? i(r) : i
-      const target = ((n % ROOMS.length) + ROOMS.length) % ROOMS.length
-      if (target !== r) setMoved(true)
-      return target
-    })
-  }, [])
-
-  // Seamless doorway navigation: plays futuristic whoosh audio and glides to target sector
-  const onOpenDoor = useCallback(
-    (targetRoom) => {
-      const current = room
-      const target = typeof targetRoom === 'function' ? targetRoom(current) : targetRoom
-      const nextTarget = ((target % ROOMS.length) + ROOMS.length) % ROOMS.length
-      if (nextTarget === current) return
-
-      playDoorOpenSound()
-      setInfinityMode(false)
-      stepRoom(nextTarget)
-    },
-    [room, stepRoom],
-  )
-
-  const go = useCallback(
-    (i) => {
-      onOpenDoor(i)
-    },
-    [onOpenDoor],
-  )
-
-  const onEnterInfinity = useCallback(() => {
+  // Open a specific door
+  const openDoor = useCallback((idx = room) => {
     playDoorOpenSound()
-    setInfinityMode(true)
-    setLoopMode('tour')
-    setLoopPlaying(true)
-    setLoopCycle(1)
-    stepRoom(0)
-  }, [stepRoom])
-
-  // Continuous auto-progression loop through portfolio sectors
-  useEffect(() => {
-    if (!infinityMode || loopMode !== 'tour' || !loopPlaying) return
-    const ms = Math.max(2800, Math.round(6200 / loopSpeed))
-    const timer = setInterval(() => {
-      setRoom((r) => {
-        const next = (r + 1) % ROOMS.length
-        if (next === 0) setLoopCycle((c) => c + 1)
-        // Play door opening transition during tour
-        playDoorOpenSound()
-        setOpeningDoorIndex(r === 5 ? 5 : r)
-        setTimeout(() => setOpeningDoorIndex(null), 1900)
-        return next
-      })
-    }, ms)
-    return () => clearInterval(timer)
-  }, [infinityMode, loopMode, loopPlaying, loopSpeed])
-
-  const loopNext = useCallback(() => {
-    setRoom((r) => {
-      const next = (r + 1) % ROOMS.length
-      if (next === 0) setLoopCycle((c) => c + 1)
-      playDoorOpenSound()
-      setOpeningDoorIndex(r === 5 ? 5 : r)
-      setTimeout(() => setOpeningDoorIndex(null), 1900)
+    setOpenDoors((prev) => {
+      const next = [...prev]
+      next[idx] = true
       return next
     })
-  }, [])
+  }, [room])
 
-  const loopPrev = useCallback(() => {
-    setRoom((r) => {
-      const prev = (r - 1 + ROOMS.length) % ROOMS.length
-      playDoorOpenSound()
-      setOpeningDoorIndex(prev)
-      setTimeout(() => setOpeningDoorIndex(null), 1900)
-      return prev
+  // Close a specific door
+  const closeDoor = useCallback((idx = room) => {
+    playDoorCloseSound()
+    setOpenDoors((prev) => {
+      const next = [...prev]
+      next[idx] = false
+      return next
     })
+  }, [room])
+
+  // Toggle a door open or closed
+  const toggleDoor = useCallback((idx = room) => {
+    setOpenDoors((prev) => {
+      const isOpen = !!prev[idx]
+      if (isOpen) {
+        playDoorCloseSound()
+      } else {
+        playDoorOpenSound()
+      }
+      const next = [...prev]
+      next[idx] = !isOpen
+      return next
+    })
+  }, [room])
+
+  // Close all open doors across the gallery
+  const closeAllDoors = useCallback(() => {
+    playDoorCloseSound()
+    setOpenDoors([false, false, false, false, false, false])
   }, [])
 
-  // Initialize the Cinematic 0-100 Intro if present
-  useEffect(() => {
-    if (typeof window !== 'undefined' && document.getElementById('cinematic-intro-stage')) {
-      new CinematicIntro({
-        onComplete: () => {
-          // Entry complete
+  // Steps through the open door into the next room
+  const stepThroughDoor = useCallback(() => {
+    setStop((s) => (s % 2 === 1 ? s + 1 : s))
+  }, [])
+
+  // Cosmic hyperspace warp from Infinity Portal back to Room 1 (Home)
+  const warpToHome = useCallback(() => {
+    playInfinityWarpSound()
+    setWarping(true)
+    setTimeout(() => {
+      setStop(0)
+      window.location.hash = 'home'
+      setWarpToast(true)
+      setTimeout(() => setWarping(false), 600)
+      setTimeout(() => setWarpToast(false), 3800)
+    }, 450)
+  }, [])
+
+  // Walks forward: room, then its door, then (once opened) steps into the next room.
+  // When in Room 6 (Infinity Realm), forward step loops back to Room 1 (Home)!
+  const next = useCallback(() => {
+    setStop((s) => {
+      const curRoom = Math.floor(s / 2)
+      const door = s % 2 === 1
+      if (door) {
+        if (openDoors[curRoom]) {
+          return Math.min((ROOMS.length - 1) * 2, s + 1)
         }
-      })
-    }
+        openDoor(curRoom)
+        return s
+      }
+      if (curRoom === ROOMS.length - 1) {
+        warpToHome()
+        return s
+      }
+      return curRoom < ROOMS.length - 1 ? s + 1 : s
+    })
+  }, [openDoors, openDoor, warpToHome])
+
+  const prev = useCallback(() => setStop((s) => Math.max(0, s - 1)), [])
+
+  // Jumping to a room through the nav opens path doors
+  const go = useCallback((target) => {
+    const t = clamp(target)
+    setOpenDoors((prev) => {
+      const next = [...prev]
+      for (let i = 0; i < t; i++) next[i] = true
+      return next
+    })
+    setStop(t * 2)
   }, [])
 
+  // Keyboard navigation
   useEffect(() => {
-    if (webgl) loadFonts().then(() => setFontsOk(true))
-  }, [webgl])
+    const onKey = (e) => {
+      if (['INPUT', 'TEXTAREA', 'BUTTON'].includes(e.target.tagName)) return
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault()
+        next()
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault()
+        prev()
+      } else if (e.key === 'Home') {
+        e.preventDefault()
+        go(0)
+      } else if (e.key === 'End') {
+        e.preventDefault()
+        go(ROOMS.length - 1)
+      } else if (e.key === 'Enter' && atDoor) {
+        e.preventDefault()
+        if (openDoors[room]) {
+          stepThroughDoor()
+        } else {
+          openDoor(room)
+        }
+      } else if ((e.key === 'c' || e.key === 'C') && atDoor) {
+        e.preventDefault()
+        toggleDoor(room)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [next, prev, go, atDoor, room, openDoors, stepThroughDoor, openDoor, toggleDoor])
 
+  // Wheel: debounced, ignored while the cursor is inside a scrollable panel.
   useEffect(() => {
-    const onResize = () => setCompact(window.innerWidth < 900)
-    const onHash = () => setRoom(roomFromHash())
-    window.addEventListener('resize', onResize)
-    window.addEventListener('hashchange', onHash)
+    let acc = 0
+    let lock = false
+    const onWheel = (e) => {
+      if (canScroll(e.target, e.deltaY)) return
+      acc += e.deltaY
+      if (lock || Math.abs(acc) < 40) return
+      lock = true
+      if (acc > 0) next()
+      else prev()
+      acc = 0
+      setTimeout(() => (lock = false), 600)
+    }
+    window.addEventListener('wheel', onWheel, { passive: true })
+    return () => window.removeEventListener('wheel', onWheel)
+  }, [next, prev])
+
+  // Touch swipe
+  useEffect(() => {
+    let sy = 0
+    let startEl = null
+    const onStart = (e) => {
+      sy = e.touches[0].clientY
+      startEl = e.target
+    }
+    const onEnd = (e) => {
+      const dy = sy - e.changedTouches[0].clientY
+      if (Math.abs(dy) < 45 || canScroll(startEl, dy)) return
+      if (dy > 0) next()
+      else prev()
+    }
+    window.addEventListener('touchstart', onStart, { passive: true })
+    window.addEventListener('touchend', onEnd, { passive: true })
     return () => {
-      window.removeEventListener('resize', onResize)
-      window.removeEventListener('hashchange', onHash)
+      window.removeEventListener('touchstart', onStart)
+      window.removeEventListener('touchend', onEnd)
     }
-  }, [])
+  }, [next, prev])
 
-  // Keep the URL and title in sync so each room can be linked to.
+  // Hash sync
+  useEffect(() => {
+    if (!atDoor) window.location.hash = ROOMS[room].id
+  }, [room, atDoor])
+
+  // Accent color matches the room you are currently standing in
   useEffect(() => {
     document.documentElement.style.setProperty('--room', ROOMS[room].color)
-    document.title = `${ROOMS[room].title} | ${PROFILE.name}`
-    if (webgl) history.replaceState(null, '', `#${ROOMS[room].id}`)
-  }, [room, webgl])
+  }, [room])
 
-  // Wheel, touch and keyboard navigation between rooms.
+  // Load fonts and handle responsive breakpoint
   useEffect(() => {
-    if (!webgl) return
-    let lockedUntil = 0
-    let acc = 0
-    let accTimer = 0
+    loadFonts().then(() => setFontsOk(true))
+    const onResize = () => setCompact(window.innerWidth < 900)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
-    const step = (d) => {
-      const now = performance.now()
-      if (now < lockedUntil) return
-      lockedUntil = now + 950
-      go((r) => r + d)
-    }
-
-    const onWheel = (e) => {
-      if (e.target.closest?.('input, textarea')) return
-      if (canScroll(e.target, e.deltaY)) return
-      const now = performance.now()
-      if (now < lockedUntil) {
-        lockedUntil = Math.max(lockedUntil, now + 120) // swallow trackpad inertia
-        return
+  // Initialize the Cinematic 0-100 Intro
+  useEffect(() => {
+    try {
+      if (CinematicIntro && typeof CinematicIntro === 'function') {
+        new CinematicIntro({
+          onComplete: () => {
+            // Intro finished
+          },
+        })
       }
-      acc += e.deltaY
-      clearTimeout(accTimer)
-      accTimer = setTimeout(() => (acc = 0), 160)
-      if (Math.abs(acc) > 70) {
-        step(acc > 0 ? 1 : -1)
-        acc = 0
-      }
+    } catch (e) {
+      console.warn('Cinematic intro initialization skipped:', e)
     }
+  }, [])
 
-    let y0 = 0
-    let scrollable = false
-    const onTouchStart = (e) => {
-      y0 = e.touches[0].clientY
-      scrollable = !!e.target.closest?.('.panel-scroll')
-    }
-    const onTouchEnd = (e) => {
-      const dy = y0 - e.changedTouches[0].clientY
-      if (scrollable || Math.abs(dy) < 60) return
-      step(dy > 0 ? 1 : -1)
-    }
-
-    const onKey = (e) => {
-      if (e.target.closest?.('input, textarea, select')) return
-      if (e.altKey || e.ctrlKey || e.metaKey) return
-      const id = ROOMS[room].id
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        const d = e.key === 'ArrowRight' ? 1 : -1
-        if (id === 'theater') return setProjIndex((i) => stepProject(i, d, filterRef.current))
-        if (id === 'experience') return setExpIndex((i) => (i + d + 3) % 3)
-      }
-      if (['ArrowDown', 'PageDown', 'ArrowRight'].includes(e.key)) step(1)
-      else if (['ArrowUp', 'PageUp', 'ArrowLeft'].includes(e.key)) step(-1)
-      else if (e.key === 'Home') go(0)
-      else if (e.key === 'End') go(ROOMS.length - 1)
-      else return
-      e.preventDefault()
-    }
-
-    window.addEventListener('wheel', onWheel, { passive: true })
-    window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchend', onTouchEnd, { passive: true })
-    window.addEventListener('keydown', onKey)
-    return () => {
-      window.removeEventListener('wheel', onWheel)
-      window.removeEventListener('touchstart', onTouchStart)
-      window.removeEventListener('touchend', onTouchEnd)
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [webgl, room, go])
-
-  filterRef.current = projFilter
-  const panelProps = {
-    room,
-    go,
-    filter,
-    setFilter,
-    expIndex,
-    setExpIndex,
-    projIndex,
-    setProjIndex,
-    projFilter,
-    setProjFilter,
-    onOpenDoor,
-    onEnterInfinity,
-  }
-
-  /* ---- No WebGL: same content as a normal scrolling page ---- */
-  if (!webgl || failed) {
+  /* Plain version when WebGL is unavailable or fails */
+  if (failed || !webgl) {
     return (
       <div className="fallback">
         <header className="fb-head">
+          <p>3D hardware acceleration unavailable</p>
           <strong>{PROFILE.name}</strong>
-          <p>Your browser could not start WebGL, so this is the plain version of the portfolio.</p>
         </header>
         {ROOMS.map((r, i) => (
-          <section key={r.id} className="panel fb-section" style={{ '--room': r.color }}>
-            <RoomPanel {...panelProps} room={i} />
+          <section key={r.id} className="panel">
+            <RoomPanel
+              room={i}
+              go={go}
+              onWarpHome={warpToHome}
+              filter={filter}
+              setFilter={setFilter}
+              expIndex={expIndex}
+              setExpIndex={setExpIndex}
+              projIndex={projIndex}
+              setProjIndex={setProjIndex}
+              projFilter={projFilter}
+              setProjFilter={setProjFilter}
+            />
           </section>
         ))}
       </div>
     )
   }
 
-  const next = ROOMS[room + 1]
-  const prev = ROOMS[room - 1]
-
   return (
     <>
-      {fontsOk && (
+      <div className="stage" aria-hidden="true">
         <SceneBoundary onFail={() => setFailed(true)}>
-        <Suspense fallback={null}>
-          <div className="stage">
+          <Suspense fallback={null}>
             <Scene
               room={room}
+              atDoor={atDoor}
+              openDoors={openDoors}
+              onToggleDoor={toggleDoor}
+              onWarpHome={warpToHome}
               tier={tier}
               compact={compact}
               reduced={reduced}
-              ready={ready}
+              ready={ready && fontsOk}
               onReady={onReady}
               skillFilter={filter}
               expIndex={expIndex}
@@ -331,17 +336,10 @@ export default function App() {
               projIndex={projIndex}
               setProjIndex={setProjIndex}
               projFilter={projFilter}
-              onOpenDoor={onOpenDoor}
-              openingDoorIndex={openingDoorIndex}
-              infinityMode={infinityMode}
-              infinityType={loopMode}
-              onEnterInfinity={onEnterInfinity}
-              warpSpeed={warpSpeed}
             />
-          </div>
-        </Suspense>
+          </Suspense>
         </SceneBoundary>
-      )}
+      </div>
 
       <header className="head">
         <button type="button" className="brand" onClick={() => go(0)}>
@@ -353,184 +351,149 @@ export default function App() {
               key={r.id}
               type="button"
               className="nav-link"
-              aria-current={!infinityMode && i === room ? 'page' : undefined}
-              onClick={() => (infinityMode ? stepRoom(i) : go(i))}
+              aria-current={!atDoor && i === room}
+              onClick={() => go(i)}
             >
-              <span className="num">{String(i + 1).padStart(2, '0')}</span>
               {r.nav}
             </button>
           ))}
         </nav>
-        <a className="resume" href={PROFILE.resume} target="_blank" rel="noopener noreferrer">
+        <a className="btn primary resume" href={PROFILE.resume} target="_blank" rel="noopener noreferrer">
           Resume
         </a>
       </header>
 
-      {/* Main room panel: shown in normal mode or when toggled in Infinity Tour */}
-      {ready && (!infinityMode || showPanelInLoop) && (
-        <main
-          className={`panel ${infinityMode ? 'panel-infinity-floating' : ''}`}
-          key={ROOMS[room].id}
-          aria-live="polite"
-        >
-          {infinityMode && (
-            <div className="infinity-panel-header">
-              <span className="telemetry-pulse" />
-              <span>SECTOR 0{room + 1} // {ROOMS[room].title.toUpperCase()}</span>
-              <button
-                type="button"
-                className="btn-panel-close"
-                onClick={() => setShowPanelInLoop(false)}
-                title="Minimize Panel"
-              >
-                ✕
-              </button>
-            </div>
-          )}
+      {!atDoor && (
+        <main className="panel" key={ROOMS[room].id}>
           <div className="panel-scroll">
-            <RoomPanel {...panelProps} />
+            <RoomPanel
+              room={room}
+              go={go}
+              onWarpHome={warpToHome}
+              filter={filter}
+              setFilter={setFilter}
+              expIndex={expIndex}
+              setExpIndex={setExpIndex}
+              projIndex={projIndex}
+              setProjIndex={setProjIndex}
+              projFilter={projFilter}
+              setProjFilter={setProjFilter}
+            />
           </div>
         </main>
       )}
 
-      {/* Interactive Cockpit Warp & Portfolio Loop Telemetry HUD */}
-      {ready && infinityMode && (
-        <div className="infinity-cockpit-bar" role="status" aria-live="polite">
-          <div className="telemetry-top">
-            <div className="telemetry-badge">
-              <span className="telemetry-pulse" />
-              <span>
-                {loopMode === 'tour'
-                  ? `🔁 INFINITE PORTFOLIO LOOP ACTIVE // SECTOR 0${room + 1}: ${ROOMS[room].title.toUpperCase()} (CYCLE #${loopCycle})`
-                  : `🚀 HYPERSPACE DEEP COSMOS WARP // VELOCITY: ${warpSpeed >= 70 ? 'WARP 9.9c MAX' : 'WARP 9.2c CRUISE'}`}
-              </span>
-            </div>
-            <button
-              type="button"
-              className="btn-warp-exit"
-              onClick={() => setInfinityMode(false)}
-              title="Exit Infinity Mode"
-            >
-              ✕ EXIT INFINITY
-            </button>
-          </div>
+      {atDoor && (
+        <div className={`door-hint ${room === 5 ? 'infinity-door-hint' : ''}`}>
+          <p className="door-name">
+            <small>
+              {room === 5 ? 'GATEWAY // ANANTA DWAR' : `Room ${String(room + 2).padStart(2, '0')}`}
+            </small>
+            {room === 5 ? 'The Infinity Portal (Ananta Dwar)' : ROOMS[room + 1].title}
+            <span className={`door-status-pill ${openDoors[room] ? 'open' : 'closed'}`}>
+              {openDoors[room] ? '● Door Open' : '○ Door Sealed'}
+            </span>
+          </p>
 
-          {/* Sector progress indicator pills for all 6 rooms during tour */}
-          {loopMode === 'tour' && (
-            <div className="telemetry-sectors">
-              {ROOMS.map((r, i) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  className={`telemetry-dot-btn ${i === room ? 'active' : ''}`}
-                  onClick={() => stepRoom(i)}
-                  title={`Jump to Sector 0${i + 1}: ${r.title}`}
-                >
-                  <span className="dot-indicator" />
-                  <span className="dot-label">0{i + 1} {r.nav}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="telemetry-sub">
-            {loopMode === 'tour'
-              ? 'Continuous Auto-Touring Through Portfolio Sectors • Drifting Stardust & Parallax Planets'
-              : 'Endless Linear Deep Space Flight • Observational Exploration into Negative Z'}
-          </div>
-
-          <div className="telemetry-controls">
-            {loopMode === 'tour' ? (
-              <>
-                <button
-                  type="button"
-                  className="btn-hud-action"
-                  onClick={() => setLoopPlaying((p) => !p)}
-                >
-                  {loopPlaying ? '⏸ PAUSE TOUR' : '▶ RESUME TOUR'}
-                </button>
-                <button type="button" className="btn-hud-action" onClick={loopPrev}>
-                  ⏮ PREV
-                </button>
-                <button type="button" className="btn-hud-action" onClick={loopNext}>
-                  ⏭ NEXT
-                </button>
-                <button
-                  type="button"
-                  className="btn-hud-action"
-                  onClick={() => setLoopSpeed((s) => (s === 1 ? 2 : s === 2 ? 3 : 1))}
-                >
-                  ⚡ SPEED: {loopSpeed}X
-                </button>
-                <button
-                  type="button"
-                  className={`btn-hud-action ${showPanelInLoop ? 'active' : ''}`}
-                  onClick={() => setShowPanelInLoop((p) => !p)}
-                >
-                  📄 {showPanelInLoop ? 'MINIMIZE PANEL' : 'SHOW HUD PANEL'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-hud-mode"
-                  onClick={() => setLoopMode('warp')}
-                >
-                  🚀 HYPERSPACE FLIGHT
-                </button>
-              </>
+          <div className="door-actions">
+            {!openDoors[room] ? (
+              <button type="button" className="btn primary" onClick={() => openDoor(room)}>
+                {room === 5 ? 'Open the Infinity Door [∞]' : 'Open the door'}
+              </button>
             ) : (
               <>
-                <button
-                  type="button"
-                  className="btn-warp-boost"
-                  onClick={() => setWarpSpeed((s) => (s >= 70 ? 32 : 72))}
-                >
-                  ⚡ {warpSpeed >= 70 ? 'CRUISE MODE (32c)' : 'HYPERDRIVE BOOST (72c)'}
+                <button type="button" className="btn primary" onClick={stepThroughDoor}>
+                  {room === 5 ? 'Enter Infinity Realm [∞] →' : `Step into ${ROOMS[room + 1].title} →`}
                 </button>
-                <button
-                  type="button"
-                  className="btn-hud-mode"
-                  onClick={() => setLoopMode('tour')}
-                >
-                  🔁 PORTFOLIO LOOP TOUR
+                <button type="button" className="btn secondary door-close-btn" onClick={() => closeDoor(room)}>
+                  Close door ✕
                 </button>
               </>
             )}
           </div>
+
+          <p className="hint">
+            {openDoors[room]
+              ? 'Click the door leaves to close, or press Enter / arrow key to walk in'
+              : room === 5
+              ? 'Click the Infinity Door to open, or press Enter'
+              : 'Click the door to open, or press Enter'}
+          </p>
         </div>
       )}
 
-      {ready && !infinityMode && (
-        <div className="walk" aria-label="Move between rooms">
-          {prev && (
-            <button type="button" onClick={() => go(room - 1)}>
-              Back to {prev.nav}
+      {ready && !atDoor && (
+        <nav className="walk" aria-label="Walk between rooms">
+          {room > 0 && (
+            <button type="button" onClick={prev}>
+              Back to {ROOMS[room - 1].title}
             </button>
           )}
-          {next ? (
+
+          {/* Close entrance door option if the door behind this room is open */}
+          {room > 0 && openDoors[room - 1] && (
             <button
               type="button"
-              className="walk-btn-next"
-              onClick={() => onOpenDoor(room + 1)}
+              className="walk-door-btn"
+              onClick={() => closeDoor(room - 1)}
+              title="Close the entrance door behind you"
             >
-              SECTOR: {next.title.toUpperCase()} →
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="walk-btn-infinity"
-              onClick={onEnterInfinity}
-            >
-              ∞ ENTER INFINITY HYPERSPACE →
+              🚪 Close door behind
             </button>
           )}
+
+          {/* Close all open doors if any doors are open */}
+          {openDoors.some(Boolean) && (
+            <button
+              type="button"
+              className="walk-door-btn"
+              onClick={closeAllDoors}
+              title="Close all open doors"
+            >
+              🚪 Close all doors
+            </button>
+          )}
+
+          {room < ROOMS.length - 1 && (
+            <button
+              type="button"
+              onClick={next}
+              className={room === 5 ? 'walk-btn-infinity' : 'walk-btn-next'}
+            >
+              {room === 5 ? 'Walk to the Infinity Door [∞] →' : `Next room: ${ROOMS[room + 1].title} →`}
+            </button>
+          )}
+
+          {/* Loop from Infinity Portal back to Room 1 (Home) */}
+          {room === 6 && (
+            <button
+              type="button"
+              onClick={warpToHome}
+              className="walk-btn-infinity warp-loop-btn"
+            >
+              Loop back to Room 1 (Home) ↺
+            </button>
+          )}
+        </nav>
+      )}
+
+      {ready && !atDoor && (
+        <p className="hint">
+          {room === 6
+            ? 'Scroll, press Space/Right Arrow, or click the Infinity Core to loop back to Room 1'
+            : 'Scroll, swipe, or use the arrow keys to walk to the next door'}
+        </p>
+      )}
+
+      {/* Cosmic Warp transition overlay & toast notification */}
+      <div className={`warp-overlay ${warping ? 'active' : ''}`} aria-hidden="true" />
+      {warpToast && (
+        <div className="warp-toast" role="status">
+          <span className="warp-toast-icon">∞</span> Returned to Room 01 (Home) via Infinity Loop
         </div>
       )}
 
-      {ready && !moved && !infinityMode && (
-        <p className="hint">Scroll, click open gateways, or use arrow keys to navigate</p>
-      )}
-
-      <div className={`loader${ready ? ' done' : ''}`} aria-hidden={ready}>
+      <div className={`loader${ready && fontsOk ? ' done' : ''}`} aria-hidden={ready && fontsOk}>
         <div className="loader-inner">
           <p className="loader-name">{PROFILE.name}</p>
           <p className="loader-role">Building the rooms</p>

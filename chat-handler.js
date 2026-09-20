@@ -314,8 +314,65 @@ async function tryNvidiaNemotron(trimmedMsg, history) {
 }
 
 /**
+ * 3. FALLBACK: Google Gemini
+ */
+async function tryGemini(trimmedMsg, history) {
+  const geminiKey = (process.env.GEMINI_API_KEY || '').trim();
+  if (!geminiKey || geminiKey.includes('your_gemini_api_key')) {
+    return null;
+  }
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+
+  let historyList = Array.isArray(history) ? history.slice(-6) : [];
+  if (historyList.length > 0) {
+    const lastItem = historyList[historyList.length - 1];
+    if (lastItem && lastItem.role === 'user' && (lastItem.content === trimmedMsg || lastItem.text === trimmedMsg)) {
+      historyList = historyList.slice(0, -1);
+    }
+  }
+
+  const contents = [
+    ...historyList.map(item => ({
+      role: item.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: item.content || item.text || '' }]
+    })).filter(c => c.parts[0].text),
+    { role: 'user', parts: [{ text: trimmedMsg }] }
+  ];
+
+  try {
+    const response = await fetchWithTimeout(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: SYSTEM_PROMPT }]
+        },
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 350
+        }
+      })
+    }, 8000);
+
+    if (response && response.ok) {
+      const data = await response.json();
+      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (reply && reply.trim()) {
+        return reply.trim().replace(/\*\*/g, '').replace(/\*/g, '');
+      }
+    }
+  } catch (err) {
+    // Continue to next fallback
+  }
+
+  return null;
+}
+
+/**
  * Orchestrator:
- * User Request -> Groq (Primary if key set) -> NVIDIA Nemotron (Fallback if key set) -> Offline Contextual Engine
+ * User Request -> Groq (Primary if key set) -> NVIDIA Nemotron -> Gemini -> Offline Contextual Engine
  */
 export async function getChatReply(message, history = []) {
   const trimmedMsg = (message || '').trim();
@@ -341,6 +398,15 @@ export async function getChatReply(message, history = []) {
     }
   }
 
-  // 3. CONTEXTUAL KNOWLEDGE ENGINE: Fast, accurate portfolio responses
+  // 3. FALLBACK: Google Gemini (if key available)
+  const geminiKey = (process.env.GEMINI_API_KEY || '').trim();
+  if (geminiKey && !geminiKey.includes('your_gemini_api_key')) {
+    const geminiReply = await tryGemini(trimmedMsg, history);
+    if (geminiReply) {
+      return geminiReply;
+    }
+  }
+
+  // 4. CONTEXTUAL KNOWLEDGE ENGINE: Fast, accurate portfolio responses
   return getOfflineResponse(trimmedMsg);
 }

@@ -1,4 +1,4 @@
-// All copy below is taken from the existing portfolio (index.html) so nothing has to be retyped.
+// All copy below is taken from the existing portfolio so nothing has to be retyped.
 
 export const PROFILE = {
   name: 'Rameshwor Chaudhary',
@@ -28,7 +28,7 @@ export const PROFILE = {
   web3formsKey: 'b280464a-ba65-4910-a01d-7e94b349436f',
 }
 
-// Room names come straight from the original nav / scene titles.
+// Room names come straight from the original nav / scene titles, ending with the Infinity Gate.
 export const ROOMS = [
   { id: 'home', nav: 'Home', title: 'Home', color: '#ff3314' },
   { id: 'universe', nav: 'Universe', title: 'The Neural Universe', color: '#00f076' },
@@ -36,6 +36,7 @@ export const ROOMS = [
   { id: 'education', nav: 'Education', title: 'Academic Education', color: '#f4c068' },
   { id: 'theater', nav: 'Projects', title: 'The Holo Theater', color: '#ff3314' },
   { id: 'contact', nav: 'Contact', title: 'Start a Conversation', color: '#00f076' },
+  { id: 'infinity', nav: '∞ Infinity', title: 'The Infinity Portal', color: '#00f0ff' },
 ]
 
 export const UNIVERSE = {
@@ -86,186 +87,162 @@ export const SKILLS = [
 export const CAT_COLOR = { ai: '#ff3314', web: '#ff8400', tools: '#00f076' }
 
 export const EXPERIENCE_INTRO =
-  'Virtual corporate consulting simulations, machine learning pipelines, and production full-stack engineering with verified commercial impact.'
+  'Virtual corporate consulting internships, machine learning pipelines, and production full-stack engineering.'
 
 export const EXPERIENCE = [
   {
-    tag: 'Corporate consulting simulation',
-    status: 'Verified certification',
+    tag: 'Forage verified',
     period: '2026',
     org: 'BCG X',
     title: 'Data Science Virtual Experience Program',
     sub: 'Boston Consulting Group (BCG X), Forage certification',
-    kpis: [
-      { label: 'Model Precision', value: '94.2%' },
-      { label: 'Engineered Features', value: '24+' },
-      { label: 'Client Records', value: '15,000+' },
-      { label: 'Revenue Protected', value: '$2.4M ARR' },
-    ],
     summary:
-      'Engineered end-to-end predictive machine learning pipelines and commercial data diagnostics for Boston Consulting Group clients to mitigate SME churn risk and maximize annual contract value.',
+      'Engineered end-to-end data analytics and predictive machine learning models for commercial SME client retention and churn prevention.',
     points: [
-      'Conducted rigorous exploratory data analysis (EDA) across 15,000+ client commercial records, identifying critical price sensitivity inflection points and churn drivers.',
-      'Engineered 24+ domain-specific feature vectors covering off-peak pricing deltas, monthly consumption volatility, contract tenure metrics, and energy usage patterns.',
-      'Trained, cross-validated (5-fold CV), and optimized Random Forest and Gradient Boosted classifiers achieving 94.2% precision in identifying imminent client cancellations.',
-      'Applied SHAP (SHapley Additive exPlanations) and feature importance analysis to interpret non-linear decision boundaries and uncover key retention levers.',
-      'Formulated an executive data strategy presenting financial simulation matrices for targeted discount incentives, protecting high-value enterprise accounts from attrition.',
-      'Documented complete reproducible data science workflows with automated data cleaning, missing value imputation, skewness transformations, and visual diagnostics.',
+      'Conducted rigorous Exploratory Data Analysis (EDA) on commercial datasets to isolate behavior patterns and churn risk drivers.',
+      'Engineered high-impact feature vectors from historical price sensitivity metrics and power consumption records.',
+      'Built and tuned Random Forest classification model achieving high predictive precision for customer churn detection.',
+      'Formulated strategic commercial recommendations estimating client retention impact and discount campaign viability.',
     ],
-    tech: ['Python', 'Scikit-Learn', 'Pandas & NumPy', 'Random Forest', 'Gradient Boosting', 'Feature Engineering', 'SHAP Values', 'Cross-Validation', 'EDA', 'Matplotlib & Seaborn'],
+    context:
+      'The case simulates a consulting engagement for an energy utility that is losing small and medium business customers to competitors. The job is to work out whether price sensitivity drives the churn, and what a discount strategy would actually be worth.',
+    phasesTitle: 'How the program was structured',
+    phases: [
+      { t: 'Frame the problem', d: "Turn the client's question into testable hypotheses, such as whether customers who churn are more sensitive to price than those who stay." },
+      { t: 'Audit and explore the data', d: 'Check the customer, consumption and price datasets for quality problems, then use EDA to see how churners differ from loyal customers.' },
+      { t: 'Engineer features and model', d: 'Turn raw price and usage history into features, train a Random Forest classifier, and judge it with precision and recall, which matter more than accuracy when churn is the rare outcome.' },
+      { t: 'Recommend', d: 'Convert the model output into a commercial recommendation, including which customers a targeted discount could realistically retain.' },
+    ],
+    learned:
+      'How to move from a vague business question to a defensible model, and why the recommendation matters as much as the model score. It also made class imbalance and honest evaluation concrete.',
+    tech: ['Python', 'Scikit-Learn', 'Pandas', 'Random Forest', 'Churn Modeling', 'EDA'],
   },
   {
-    tag: 'Commercial retail analytics',
-    status: 'Verified certification',
+    tag: 'Forage verified',
     period: '2026',
     org: 'Quantium',
     title: 'Data Analytics Virtual Experience Program',
     sub: 'Quantium Analytics, Forage certification',
-    kpis: [
-      { label: 'Transactions Analyzed', value: '2.5M+' },
-      { label: 'Trial Store Uplift', value: '+7.8%' },
-      { label: 'Algorithm Accuracy', value: '98.6%' },
-      { label: 'Trial Window', value: '12 Weeks' },
-    ],
     summary:
-      'Analyzed massive point-of-sale retail datasets for large supermarket chains to isolate customer purchasing behavior, validate store layout trial experiments, and drive category uplift.',
+      'Evaluated high-volume supermarket retail transaction datasets, conducted customer segmentation, and performed statistical benchmark testing.',
     points: [
-      'Processed and cleansed 2,500,000+ point-of-sale transaction records across chip and confectionery categories to build granular customer segment personas and purchasing profiles.',
-      'Formulated statistical benchmarking engines utilizing Pearson correlation and Euclidean distance algorithms to pair trial stores (Stores 77, 86, 88) with optimal control benchmarks.',
-      'Conducted rigorous hypothesis testing (two-tailed Welch’s t-tests, p-value < 0.05) to isolate statistically significant revenue (+7.8%) and customer footfall lift during a 12-week trial window.',
-      'Designed executive visual dashboards and translated complex statistical telemetry into clear merchandising actions and shelf-space reallocation strategies.',
-      'Derived customer lifetime value (CLV) distributions to empower high-margin product bundling and optimal premium product placement.',
-      'Delivered a structured commercial presentation recommending rollout parameters for nationwide store layout optimizations.',
+      'Processed millions of point-of-sale retail records to uncover category customer profiles and key brand purchasing metrics.',
+      'Identified benchmark control stores using Pearson correlation and Euclidean distance algorithms to test trial store changes.',
+      'Performed hypothesis testing and assessment to measure statistically significant monthly sales and customer transaction uplift.',
+      'Authored executive analytics report presenting actionable merchandising and category management strategies.',
     ],
-    tech: ['Python', 'Statistical Hypothesis Testing', 'Pearson Correlation', 'Euclidean Distance', 'Two-Sample t-Tests', 'Retail Analytics', 'Category Management', 'Matplotlib', 'Pandas'],
+    context:
+      'The case simulates working in a retail analytics team that advises a supermarket category manager. The goal is to understand who buys the category and why, then measure whether a store trial actually changed sales.',
+    phasesTitle: 'How the program was structured',
+    phases: [
+      { t: 'Prepare the data and profile customers', d: 'Clean and merge transaction and customer data, then segment shoppers by life stage and spend to see who drives the category.' },
+      { t: 'Design the trial comparison', d: 'For each trial store, pick control stores whose sales and customer counts moved most like it before the trial, using Pearson correlation and Euclidean distance.' },
+      { t: 'Test the uplift', d: 'Compare trial and control stores during the trial period and use hypothesis testing to check whether the differences in sales and customers are statistically significant.' },
+      { t: 'Report to the client', d: 'Summarise the findings and merchandising recommendations in a short executive-style report.' },
+    ],
+    learned:
+      'That a good comparison group matters more than a clever formula, and that a result is only useful once it is stated in terms the category manager can act on.',
+    tech: ['Python', 'Statistical Testing', 'Benchmarking', 'Retail Analytics', 'Matplotlib', 'Data Modeling'],
   },
   {
-    tag: 'Production full-stack & AI',
-    status: 'Active production',
+    tag: 'Production deployments',
     period: '2024 to present',
     org: 'Independent',
     title: 'Applied AI & Full-Stack Systems Engineer',
-    sub: 'Independent engineering, cloud platforms, and open-source systems',
-    kpis: [
-      { label: 'GitHub Commits', value: '250+' },
-      { label: 'CV Game Latency', value: '60 FPS' },
-      { label: 'LLM Response Time', value: '<100ms' },
-      { label: 'Payment Gateways', value: '2 Integrated' },
-    ],
+    sub: 'Independent engineering and open-source projects',
     summary:
-      'Designing and deploying resilient full-stack web platforms, high-throughput LLM applications, and real-time computer vision interactive systems serving real users.',
+      'Architecting production AI web solutions, computer vision games, and cloud-backed platforms serving real-world users.',
     points: [
-      'Architected PadhaiHub (Exam Mind AI): real-time AI examination preparation platform with sub-100ms LLM query generation using Groq API (Llama 3 / Mixtral) and Firebase Firestore synchronization.',
-      'Integrated dynamic question generation, KaTeX mathematical typesetting, and user performance telemetry with secure Firebase Authentication.',
-      'Developed NexShop: complete e-commerce ecosystem in Nepal featuring dual digital wallet payment integrations (eSewa & Khalti) with secure server-side cryptographic verification.',
-      'Engineered real-time OpenCV and MediaPipe computer vision football game processing 21 hand landmarks at 60 frames per second directly in Python with zero perceived latency.',
-      'Built Parth AI Voice Assistant featuring natural language intent recognition, speech-to-text (STT), automated system voice control, web scraping, and text-to-speech feedback.',
-      'Maintained consistent active engineering momentum with 250+ commits across AI, machine learning, and Next.js repositories with automated CI/CD deployment.',
+      'Architected PadhaiHub (Exam Mind AI): intelligent exam prep web application with instant question generation and Firebase auth.',
+      'Developed NexShop: production Nepal e-commerce platform with eSewa and Khalti digital payment integration and cloud order workflows.',
+      'Built computer vision gesture game with OpenCV and MediaPipe executing real-time webcam gesture classification at 60 FPS.',
+      'Maintained active open-source contribution stream with over 250+ GitHub commits across AI, Python, and Next.js repositories.',
     ],
-    tech: ['Next.js 15', 'TypeScript', 'Groq Cloud API', 'OpenCV', 'MediaPipe', 'Firebase Firestore & Auth', 'Node.js', 'Python', 'eSewa & Khalti SDKs', 'Tailwind CSS'],
+    context:
+      'Since 2024 I have been building and deploying my own products rather than only completing coursework, so the work is judged by whether real users can sign in, pay, and use it.',
+    phasesTitle: 'What I build',
+    phases: [
+      { t: 'AI web products', d: 'PadhaiHub generates exam questions on demand, using the Groq API for fast responses and Firebase authentication for user accounts.' },
+      { t: 'Payments and commerce', d: 'NexShop covers the whole shop flow for the Nepali market, including eSewa and Khalti payments, an admin portal, and cloud-backed orders.' },
+      { t: 'Computer vision', d: 'A hand-gesture game reads the webcam with OpenCV and MediaPipe and classifies gestures in real time at about 60 FPS.' },
+      { t: 'Open source and machine learning', d: 'Over 250 commits across AI, Python and Next.js repositories, plus supervised learning projects such as house price and heart disease prediction.' },
+    ],
+    learned:
+      'Shipping teaches what coursework does not: handling auth and payment edge cases, keeping AI responses fast enough to feel usable, and maintaining something after it is live.',
+    tech: ['Next.js 15', 'Groq API', 'OpenCV', 'MediaPipe', 'Firebase', 'TypeScript'],
   },
 ]
 
 export const EDUCATION_INTRO =
-  'Rigorous academic foundations in computer science, machine learning architectures, statistical modeling, and engineering mathematics.'
+  'Formal academic training in computer science, artificial intelligence, mathematical optimization, and engineering sciences.'
 
 // Listed newest first (matches the original page). The 3D steps climb oldest to newest.
 export const EDUCATION = [
   {
-    period: '2024 to 2028 (in progress)',
+    period: '2024 to 2028 (expected)',
     badge: 'Current CGPA 8.42 / 10',
-    degree: 'Bachelor of Engineering in Computer Science (AI & ML)',
+    degree: 'Bachelor of Engineering in Computer Science (AI/ML)',
     school: 'Chandigarh University, Punjab, India',
     short: 'B.E. CSE (AI/ML)',
-    metrics: [
-      { label: 'Cumulative CGPA', value: '8.42 / 10' },
-      { label: 'Specialization Track', value: 'AI & Deep Learning' },
-      { label: 'Departmental Rank', value: 'Top 5%' },
-      { label: 'Curriculum Focus', value: 'Core CS + AI' },
-    ],
     summary:
-      'Premier 4-year engineering curriculum focused on machine learning algorithms, deep neural network optimization, computer vision, data structures, and enterprise software engineering.',
-    listTitle: 'Core academic disciplines & lab curricula',
-    list: [
-      'Deep Learning & Neural Networks (PyTorch)',
-      'Data Structures & Algorithms (C++ / Python)',
-      'Computer Vision & Image Processing (OpenCV)',
-      'Database Management Systems (SQL & Cloud DB)',
-      'Design & Analysis of Algorithms (Complexity O(n))',
-      'Linear Algebra & Multivariable Calculus',
-      'Operating Systems & Concurrent Architecture',
-      'Probability & Mathematical Statistics',
-      'Distributed Systems & Cloud Computing',
-      'Software Engineering & Agile Methodologies',
+      'Comprehensive undergraduate engineering program with specialized focus on Artificial Intelligence and Machine Learning systems, algorithmic optimization, and deep learning architectures.',
+    listTitle: 'Core academic coursework',
+    focus:
+      'The degree builds from mathematical foundations (linear algebra, calculus) through core computer science (data structures, algorithms, operating systems, databases) into the AI/ML specialization. I try to apply each layer to something I can run, so coursework and projects reinforce each other.',
+    courses: [
+      { name: 'Machine Learning & Deep Learning', note: 'Supervised and unsupervised learning, model evaluation, and neural networks.' },
+      { name: 'Data Structures & Algorithms (C++/Python)', note: 'Arrays, trees, graphs and hashing, and the complexity analysis behind choosing between them.' },
+      { name: 'Computer Vision & Image Processing', note: 'Image filtering, feature detection and object tracking, the basis for my OpenCV and MediaPipe work.' },
+      { name: 'Database Management Systems (SQL / NoSQL)', note: 'Relational design and queries, plus document stores like the ones behind Firebase.' },
+      { name: 'Design & Analysis of Algorithms', note: 'Divide and conquer, dynamic programming and greedy methods, with reasoning about correctness and cost.' },
+      { name: 'Linear Algebra & Vector Calculus', note: 'Vectors, matrices and gradients, the mathematics under regression and neural network training.' },
+      { name: 'Operating Systems & Architecture', note: 'Processes, memory, scheduling and how hardware executes programs.' },
+      { name: 'Software Engineering & Agile Methods', note: 'Requirements, version control, testing and iterative delivery.' },
     ],
-    highlights: [
-      'Consistent top-tier academic standing maintaining 8.42 CGPA across rigorous engineering and mathematical coursework.',
-      'Built and evaluated deep neural networks (CNNs, RNNs, MLPs) from foundational backpropagation mathematics to PyTorch implementations.',
-      'Solved complex algorithmic challenges in dynamic programming, graph theory, and advanced tree structures.',
-      'Conducted laboratory research into low-latency inference pipelines for real-time edge computer vision.',
-      'Active developer in university technical hackathons, coding sprints, and open-source development circles.',
-    ],
-    honor: 'Dean’s Honor List standing, specialized AI/ML honors track, and technical project leadership recognition.',
+    applied:
+      'Coursework shows up directly in my projects: regression and classification in the house price and heart disease models, computer vision in the gesture game, and databases and web architecture in PadhaiHub and NexShop. Beyond the syllabus, I completed the BCG X and Quantium virtual programs and keep an active GitHub.',
+    honor: 'Academic distinction and departmental AI/ML specialization',
   },
   {
     period: '2022 to 2024',
-    badge: 'Distinction (A+)',
-    degree: 'Higher Secondary Education (+2 Science / Pre-Engineering)',
+    badge: 'Distinction',
+    degree: 'Higher Secondary Education (+2 Science)',
     school: 'Nobel Academy, Kathmandu, Nepal',
     short: '+2 Science',
-    metrics: [
-      { label: 'Academic Standing', value: 'Distinction (A+)' },
-      { label: 'Core Stream', value: 'Physical Sciences' },
-      { label: 'Mathematics', value: 'Advanced Calculus' },
-      { label: 'Program', value: 'Pre-Engineering' },
-    ],
     summary:
-      'Pre-university science and mathematics program providing an intensive foundation in advanced differential calculus, classical mechanics, electromagnetism, and introductory C computational programming.',
+      'Pre-university STEM program specializing in the physical sciences and computational fundamentals, establishing high analytical and mathematical proficiency.',
     listTitle: 'Key academic disciplines',
-    list: [
-      'Theoretical Physics & Newtonian Mechanics',
-      'Advanced Mathematics & Differential Calculus',
-      'Computer Science & C Programming Foundations',
-      'Electromagnetism, Wave Optics & Modern Physics',
-      'Physical & Analytical Chemistry',
-      'Coordinate Geometry & Vector Algebra',
+    focus:
+      'A science stream that built the habit of solving quantitative problems step by step, and which included programming in C.',
+    courses: [
+      { name: 'Physics & Mechanics', note: 'Motion, forces, energy and the modelling of physical systems.' },
+      { name: 'Advanced Mathematics & Calculus', note: 'Limits, derivatives, integrals and their applications.' },
+      { name: 'Computer Science & C Programming', note: 'Programming fundamentals in C: variables, control flow, functions and arrays.' },
+      { name: 'Analytical Chemistry', note: 'Quantitative analysis, careful measurement and reasoning from lab data.' },
     ],
-    highlights: [
-      'Graduated with distinction honors (A+) in the rigorous national STEM pre-engineering curriculum.',
-      'Consistently ranked in the top percentile in mathematics problem solving, physics practicals, and numerical methods.',
-      'Developed early algorithmic problem-solving skills through modular C programming, memory pointers, and data structures.',
-      'Represented the institution in inter-college science and mathematical Olympiad competitions.',
-    ],
-    honor: 'Graduated with Distinction in the Pre-Engineering STEM Stream.',
+    applied:
+      'Calculus from this stream is the foundation for the optimization and gradient ideas used later in machine learning.',
+    honor: 'Graduated with distinction in the STEM stream',
   },
   {
     period: '2010 to 2022',
-    badge: 'Honors & Distinction',
+    badge: 'Honors',
     degree: 'Secondary Education Examination (SEE)',
     school: 'Himchuli Academy, Nepal',
     short: 'SEE',
-    metrics: [
-      { label: 'Curriculum', value: 'National Board' },
-      { label: 'Focus', value: 'Mathematics & Science' },
-      { label: 'Distinction', value: 'First Division (Honors)' },
-      { label: 'Foundation', value: 'Computational Logic' },
-    ],
     summary:
-      'Foundational schooling covering advanced school mathematics, scientific inquiry, logic competitions, and early computer software fundamentals.',
+      'Foundational schooling with academic honors across mathematical problem solving, natural sciences, and computer literacy competitions.',
     listTitle: 'Key academic disciplines',
-    list: [
-      'Optional Mathematics & Advanced Trigonometry',
-      'Coordinate Geometry & Matrix Transformations',
-      'Natural Sciences, Physics & Chemistry',
-      'Computer Applications & Logic Systems',
-      'English Language & Technical Writing',
+    focus:
+      'The foundation years: strong habits in mathematics and science, and early exposure to computers through school computer applications and competitions.',
+    courses: [
+      { name: 'Opt. Mathematics & Trigonometry', note: 'Algebra, functions, geometry and trigonometry for multi-step problem solving.' },
+      { name: 'General Science', note: 'Introductory physics, chemistry and biology.' },
+      { name: 'Computer Applications', note: 'Basic computing, office tools and an introduction to programming ideas.' },
     ],
-    highlights: [
-      'Achieved First Division with Distinction honors across all academic subjects.',
-      'Active participant in regional science exhibitions, mathematics quizzes, and logical reasoning tournaments.',
-      'Developed initial passion for computational systems, algorithmic thinking, and computer programming.',
-    ],
-    honor: 'First Division with Distinction, Academic Excellence Recognition.',
+    applied:
+      'Optional mathematics is where the problem-solving habit started, which later carried into algorithms and data science.',
+    honor: 'Top academic standing and STEM foundation',
   },
 ]
 
@@ -352,6 +329,26 @@ export const CONTACT = {
   heading: 'Start a conversation',
   blurb:
     'Open to exciting opportunities in Machine Learning engineering, AI research, full-stack development, and innovative collaborative projects.',
+}
+
+export const INFINITY = {
+  heading: 'The Infinity Portal // Ananta Dwar',
+  blurb:
+    'Beyond the physical rooms lies the infinite horizon—a continuum of machine learning breakthroughs, deep research, and boundless technological frontiers.',
+  vision:
+    'Engineering the transition from narrow machine learning models to generalizable, autonomous multi-modal AI systems that empower humanity.',
+  horizons: [
+    { title: 'Foundation & Multi-Agent AI', desc: 'Reasoning pipelines, test-time compute scaling, parameter-efficient fine-tuning (PEFT), and self-improving agents.' },
+    { title: 'Real-Time Edge Computer Vision', desc: 'Zero-latency spatial perception, 3D hand/body gesture classification at 60+ FPS, and embedded neural engines.' },
+    { title: 'High-Throughput Vector Platforms', desc: 'Distributed semantic search, low-latency LLM inference architectures, and real-time retrieval-augmented pipelines.' },
+    { title: 'Human-AI Symbiotic Interfaces', desc: 'Voice-native cognitive companions, tactile ambient intelligence, and immersive three-dimensional spatial environments.' },
+  ],
+  stats: [
+    { label: 'Trajectory', value: '∞ Unbounded' },
+    { label: 'Research Focus', value: 'AGI & Vision' },
+    { label: 'Commits Stream', value: 'Continuous' },
+    { label: 'Cosmic Status', value: 'Active' },
+  ],
 }
 
 export const PROJECT_FILTERS = [
