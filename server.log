@@ -1,0 +1,8 @@
+
+> rameshwor-chaudhary-portfolio@1.0.0 dev
+> node server.js
+
+◇ injected env (6) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+Server running on port 3000
+^C

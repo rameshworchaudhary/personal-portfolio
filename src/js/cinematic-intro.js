@@ -307,3 +307,4 @@ class CinematicIntro {
 }
 
 window.CinematicIntro = CinematicIntro;
+export default CinematicIntro;

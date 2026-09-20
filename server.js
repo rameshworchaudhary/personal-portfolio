@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { getChatReply } from './chat-handler.js';
@@ -23,7 +24,10 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
   res.header('X-Content-Type-Options', 'nosniff');
-  res.header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.web3forms.com https:; base-uri 'self'");
+  res.header(
+    'Content-Security-Policy',
+    "default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.web3forms.com https:; base-uri 'self'"
+  );
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
@@ -34,9 +38,8 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(__dirname));
 
+// API routes for Ishwor Voice Assistant
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, query, history = [] } = req.body || {};
@@ -57,9 +60,39 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+const distPath = path.join(__dirname, 'dist');
+const distExists = fs.existsSync(distPath) && fs.existsSync(path.join(distPath, 'index.html'));
+
+if (process.env.NODE_ENV === 'production' || distExists) {
+  app.use(express.static(distPath));
+  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(express.static(__dirname));
+
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) return next();
+    if (distExists) {
+      return res.sendFile(path.join(distPath, 'index.html'));
+    }
+    res.sendFile(path.join(__dirname, 'index.html'));
+  });
+} else {
+  try {
+    const { createServer: createViteServer } = await import('vite');
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
+  } catch (e) {
+    console.warn('Vite middleware could not be loaded, falling back to static:', e);
+    app.use(express.static(path.join(__dirname, 'public')));
+    app.use(express.static(__dirname));
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api/')) return next();
+      res.sendFile(path.join(__dirname, 'index.html'));
+    });
+  }
+}
 
 export default app;
 
