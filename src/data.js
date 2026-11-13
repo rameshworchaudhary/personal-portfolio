@@ -14,7 +14,7 @@ export const PROFILE = {
     { value: '1.5+ yrs', label: 'Experience' },
     { value: '2+', label: 'Clients' },
   ],
-  resume: 'https://drive.google.com/file/d/1uo231O5QoB2iW9cbs0JiO3voDML1tCNu/view?usp=sharing',
+  resume: 'https://drive.google.com/file/d/1fcHuC-7fy2wmCGcqWw-q0DQEk2BH-dQh/view?usp=drive_link',
   email: 'chaudharyishwor143@gmail.com',
   location: 'Chandigarh, India and Kathmandu, Nepal',
   // Links without an href are hidden until you fill them in.
