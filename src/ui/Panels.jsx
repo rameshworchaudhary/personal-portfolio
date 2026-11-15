@@ -16,6 +16,8 @@ import {
   stepProject,
   CONTACT,
   INFINITY,
+  PERSONAL_DETAILS,
+  calculateAge,
 } from '../data'
 
 const Ext = ({ href, children, className }) => (
@@ -119,6 +121,34 @@ function UniversePanel({ filter, setFilter }) {
             <dd>{f.value}</dd>
           </div>
         ))}
+        <div>
+          <dt>Date of birth</dt>
+          <dd><time dateTime={PERSONAL_DETAILS.birthDate}>16 April 2003</time></dd>
+        </div>
+        <div>
+          <dt>Age</dt>
+          <dd>{calculateAge()} years</dd>
+        </div>
+        <div>
+          <dt>Height</dt>
+          <dd>{PERSONAL_DETAILS.height}</dd>
+        </div>
+        <div>
+          <dt>Weight</dt>
+          <dd>{PERSONAL_DETAILS.weight}</dd>
+        </div>
+        <div>
+          <dt>Father</dt>
+          <dd>{PERSONAL_DETAILS.father}</dd>
+        </div>
+        <div>
+          <dt>Mother</dt>
+          <dd>{PERSONAL_DETAILS.mother}</dd>
+        </div>
+        <div>
+          <dt>Brother</dt>
+          <dd>{PERSONAL_DETAILS.brother}</dd>
+        </div>
       </dl>
       <h3>Skills in orbit</h3>
       <div className="filters" role="group" aria-label="Filter skills">
