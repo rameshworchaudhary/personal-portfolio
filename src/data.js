@@ -28,6 +28,22 @@ export const PROFILE = {
   web3formsKey: 'b280464a-ba65-4910-a01d-7e94b349436f',
 }
 
+export const PERSONAL_DETAILS = {
+  birthDate: '2003-04-16',
+  height: '5 ft 10 in',
+  weight: '85 kg',
+  father: 'Surendra Prasad Chaudhary',
+  mother: 'Indu Kumari Chaudhary',
+  brother: 'Rahul Chaudhary',
+}
+
+export function calculateAge(today = new Date()) {
+  const [year, month, day] = PERSONAL_DETAILS.birthDate.split('-').map(Number)
+  let age = today.getFullYear() - year
+  if (today.getMonth() + 1 < month || (today.getMonth() + 1 === month && today.getDate() < day)) age--
+  return age
+}
+
 // Room names come straight from the original nav / scene titles, ending with the Infinity Gate.
 export const ROOMS = [
   { id: 'home', nav: 'Home', title: 'Home', color: '#ff3314' },
